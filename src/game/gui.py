@@ -1,34 +1,42 @@
 """Interface graphique (pygame-ce) : plateau de Gomoku jouable en hotseat."""
 
 import pygame
+from display import (
+    BLACK_STONE_COLOR,
+    BOARD_COLOR,
+    BOARD_PIXELS,
+    BUTTON_COLOR,
+    CELL,
+    FORBIDDEN_RADIUS,
+    FPS,
+    GHOST_ALPHA,
+    LAST,
+    LINE_COLOR,
+    MARGIN,
+    OVERLAY_COLOR,
+    PANEL_COLOR,
+    PANEL_WIDTH,
+    POPUP_COLOR,
+    POPUP_TEXT_COLOR,
+    RED,
+    SNAP_DISTANCE,
+    STAR_RADIUS,
+    STONE_RADIUS,
+    TEXT_COLOR,
+    WINDOW_SIZE,
+    WHITE_STONE_COLOR
+)
+from rules import (
+    CAPTURES_TO_WIN,
+    EMPTY,
+    BLACK,
+    BOARD_SIZE,
+    WHITE
+)
+from src.game.Board import Board
+from src.ai.heuristic import evaluation
+from src.game.Cell import Cell
 
-from board import (BLACK, BOARD_SIZE, CAPTURES_TO_WIN, EMPTY, WHITE, Board)
-
-CELL = 36            # ecart entre deux intersections (pixels)
-MARGIN = 40          # marge autour de la grille
-LAST = MARGIN + (BOARD_SIZE - 1) * CELL        # coordonnee de la derniere ligne
-BOARD_PIXELS = LAST + MARGIN                   # le plateau est un carre
-PANEL_WIDTH = 240                              # panneau d'etat, a droite
-WINDOW_SIZE = (BOARD_PIXELS + PANEL_WIDTH, BOARD_PIXELS)
-STONE_RADIUS = 15
-# Un clic (ou le survol) compte s'il tombe sur l'emplacement de la pierre.
-SNAP_DISTANCE = STONE_RADIUS
-STAR_RADIUS = 4
-FORBIDDEN_RADIUS = 6
-FPS = 60
-
-BOARD_COLOR = (222, 184, 135)
-LINE_COLOR = (0, 0, 0)
-PANEL_COLOR = (45, 45, 48)
-TEXT_COLOR = (240, 240, 240)
-BLACK_STONE_COLOR = (20, 20, 20)
-WHITE_STONE_COLOR = (245, 245, 245)
-RED = (200, 30, 30)
-GHOST_ALPHA = 110    # transparence de l'apercu (0 = invisible, 255 = opaque)
-BUTTON_COLOR = (90, 90, 96)
-POPUP_COLOR = (245, 245, 245)
-POPUP_TEXT_COLOR = (30, 30, 30)
-OVERLAY_COLOR = (0, 0, 0, 120)
 
 UNDO_BUTTON = pygame.Rect(BOARD_PIXELS + 30, 40, PANEL_WIDTH - 60, 44)
 POPUP_RECT = pygame.Rect(0, 0, 380, 190)
@@ -79,7 +87,7 @@ def compute_forbidden(board):
     return [(row, col)
             for row in range(BOARD_SIZE)
             for col in range(BOARD_SIZE)
-            if board.get(row, col) == EMPTY and not board.is_legal(row, col)]
+            if board.get_cell_state(Cell(row, col)) == EMPTY and not board.is_legal(Cell(row, col))]
 
 
 def stone_color(player):
@@ -126,7 +134,7 @@ def draw_board(screen, board, forbidden):
                            FORBIDDEN_RADIUS)
     for row in range(BOARD_SIZE):
         for col in range(BOARD_SIZE):
-            player = board.get(row, col)
+            player = board.get_cell_state(Cell(row, col))
             if player != EMPTY:
                 draw_stone(screen, row, col, player)
 
@@ -220,9 +228,13 @@ def main():
                 elif result is None:
                     cell = pixel_to_intersection(*event.pos)
                     # La GUI verifie la legalite avant d'appeler play.
-                    if cell is not None and board.is_legal(*cell):
-                        board.play(*cell)
+                    if cell is not None and board.is_legal(Cell(*cell)):
+                        player = board.current_player
+                        board.play(Cell(*cell))
                         changed = True
+                        # value = evaluation(board.grid, player, cell)
+                        value = evaluation(board.grid, player)
+                        print(value)
                 if changed:
                     result = compute_result(board)
                     forbidden = [] if result else compute_forbidden(board)
@@ -230,7 +242,7 @@ def main():
         draw_board(screen, board, forbidden)
         if result is None:
             hovered = pixel_to_intersection(*pygame.mouse.get_pos())
-            if hovered is not None and board.get(*hovered) == EMPTY:
+            if hovered is not None and board.get_cell_state(Cell(*hovered)) == EMPTY:
                 if hovered in forbidden:
                     draw_ghost(screen, red_ghost, *hovered)
                 else:

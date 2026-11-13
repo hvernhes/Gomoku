@@ -1,34 +1,25 @@
 """Plateau de Gomoku : grille 19x19, joueur courant, captures et historique."""
-
-BOARD_SIZE = 19
-
-EMPTY = 0
-BLACK = 1
-WHITE = 2
-
-# Les 8 directions, sous forme de pas (ligne, colonne).
-DIRECTIONS = [
-    (-1, -1), (-1, 0), (-1, 1),
-    (0, -1),           (0, 1),
-    (1, -1),  (1, 0),  (1, 1),
-]
-
-
-# Un axe = une direction et son opposee (horizontal, vertical, 2 diagonales).
-AXES = [(0, 1), (1, 0), (1, 1), (1, -1)]
-
-ALIGN_TO_WIN = 5
-CAPTURES_TO_WIN = 10
-
-
-def opponent_of(player):
-    if player == BLACK:
-        return WHITE
-    return BLACK
+from rules import (
+    BOARD_SIZE,
+    EMPTY,
+    BLACK,
+    WHITE,
+    DIRECTIONS,
+    AXES,
+    ALIGN_TO_WIN,
+    CAPTURES_TO_WIN
+)
+from src.game.Cell import Cell
+from src.helpers.utils import (
+    opponent_of,
+    in_bounds
+)
 
 
 class Board:
-    def __init__(self):
+    def __init__(
+            self
+    ) -> None:
         # grid[row][col] contient EMPTY, BLACK ou WHITE (indices de 0 a 18).
         # Une liste par ligne : [[EMPTY] * N] * N copierait la MEME ligne N fois.
         self.grid = [[EMPTY] * BOARD_SIZE for _ in range(BOARD_SIZE)]
@@ -39,135 +30,79 @@ class Board:
         # Chaque entree est (row, col, captured), captured = pierres retirees.
         self.history = []
 
-    def in_bounds(self, row, col):
-        return 0 <= row < BOARD_SIZE and 0 <= col < BOARD_SIZE
+    def play(
+            self,
+            cell: Cell
+        ) -> None:
+        if not self.is_legal(cell):
+            return
 
-    def get(self, row, col):
-        # Pas de verification : un indice negatif lirait l'autre bout de la
-        # liste sans erreur. L'appelant doit tester in_bounds avant.
-        return self.grid[row][col]
-
-    def is_full(self):
-        """Plus aucune intersection libre : match nul si personne n'a gagne
-        (le sujet n'en parle pas, choix du projet)."""
-        return all(cell != EMPTY for line in self.grid for cell in line)
-
-    def is_legal(self, row, col):
-        """Coup legal pour le joueur courant : dans le plateau, case libre,
-        et pas un double-three (sauf s'il capture une paire)."""
-        if not self.in_bounds(row, col) or self.grid[row][col] != EMPTY:
-            return False
         player = self.current_player
-        # Exception du sujet : un double-three introduit par une capture
-        # est autorise.
-        if self._find_captured(row, col, player):
-            return True
-        return self._count_free_threes(row, col, player) < 2
+        self.grid[cell.row][cell.column] = player
 
-    def play(self, row, col):
-        if not self.is_legal(row, col):
-            raise ValueError(f"illegal move: ({row}, {col})")
-        player = self.current_player
-        self.grid[row][col] = player
-        captured = self._capture_pairs(row, col, player)
+        captured = self._capture_pairs(cell, player)
         self.captures[player] += len(captured)
-        self.history.append((row, col, captured))
+        self.history.append((cell.row, cell.column, captured))
+
         self.current_player = opponent_of(player)
 
-    def undo(self):
+    def undo(
+            self
+        ) -> None:
         if not self.history:
-            raise ValueError("nothing to undo")
+            return
+
         row, col, captured = self.history.pop()
+
         # On redevient le joueur qui avait joue ce coup.
         player = opponent_of(self.current_player)
         self.current_player = player
         self.grid[row][col] = EMPTY
         # Les pierres retirees appartenaient a l'adversaire de ce joueur.
-        for cap_row, cap_col in captured:
-            self.grid[cap_row][cap_col] = opponent_of(player)
+        for cell in captured:
+            self.grid[cell.row][cell.column] = opponent_of(player)
         self.captures[player] -= len(captured)
 
-    def _capture_pairs(self, row, col, player):
-        """Retire les paires adverses encadrees par la pierre posee en
-        (row, col) et renvoie la liste des cases retirees."""
-        captured = self._find_captured(row, col, player)
-        for cap_row, cap_col in captured:
-            self.grid[cap_row][cap_col] = EMPTY
-        return captured
+    def get_cell_state(
+            self,
+            cell: Cell
+    ) -> int:
+        # Pas de verification : un indice negatif lirait l'autre bout de la
+        # liste sans erreur. L'appelant doit tester in_bounds avant.
+        return self.grid[cell.row][cell.column]
 
-    def _find_captured(self, row, col, player):
-        """Cases que capturerait une pierre de `player` posee en (row, col),
-        sans rien modifier. La case (row, col) elle-meme n'est pas lue."""
-        opponent = opponent_of(player)
-        captured = []
-        for d_row, d_col in DIRECTIONS:
-            end_row = row + 3 * d_row
-            end_col = col + 3 * d_col
-            # Ligne droite : si la 3e case est dans le plateau, les deux
-            # premieres le sont aussi. Un seul test de limite par direction.
-            if not self.in_bounds(end_row, end_col):
-                continue
-            row1, col1 = row + d_row, col + d_col
-            row2, col2 = row + 2 * d_row, col + 2 * d_col
-            if (self.grid[row1][col1] == opponent
-                    and self.grid[row2][col2] == opponent
-                    and self.grid[end_row][end_col] == player):
-                captured.append((row1, col1))
-                captured.append((row2, col2))
-        return captured
+    def is_full(
+            self
+        ) -> bool:
+        # Plus aucune intersection libre : match nul si personne n'a gagne
+        # (le sujet n'en parle pas, choix du projet).
+        return all(cell != EMPTY for line in self.grid for cell in line)
 
-    def _count_free_threes(self, row, col, player):
-        """Nombre d'axes (sur 4) sur lesquels une pierre de `player` posee
-        en (row, col) cree un free-three. La pierre est posee
-        temporairement, puis retiree."""
-        count = 0
-        self.grid[row][col] = player
-        try:
-            for d_row, d_col in AXES:
-                if self._has_free_three(row, col, d_row, d_col, player):
-                    count += 1
-        finally:
-            self.grid[row][col] = EMPTY
-        return count
+    def is_legal(
+            self,
+            cell: Cell
+        ) -> bool:
+        """Coup legal pour le joueur courant : dans le plateau, case libre,
+        et pas un double-three (sauf s'il capture une paire)."""
 
-    def _has_free_three(self, row, col, d_row, d_col, player):
-        """Free-three = il existe une case vide e qui, remplie par `player`,
-        donne un quatre ouvert contenant la pierre en (row, col) et e.
-        Le quatre occupe 4 cases : e est a au plus 3 cases de la pierre."""
-        for step in range(-3, 4):
-            if step == 0:
-                continue
-            e_row = row + step * d_row
-            e_col = col + step * d_col
-            if not self.in_bounds(e_row, e_col) or self.grid[e_row][e_col] != EMPTY:
-                continue
-            self.grid[e_row][e_col] = player
-            try:
-                back = self._run_length(row, col, -d_row, -d_col, player)
-                ahead = self._run_length(row, col, d_row, d_col, player)
-                # e doit faire partie de la ligne, qui doit avoir 4 pierres
-                # exactement et ses deux bouts libres.
-                if -back <= step <= ahead and 1 + back + ahead == 4:
-                    before_row = row - (back + 1) * d_row
-                    before_col = col - (back + 1) * d_col
-                    after_row = row + (ahead + 1) * d_row
-                    after_col = col + (ahead + 1) * d_col
-                    if (self._is_free(before_row, before_col)
-                            and self._is_free(after_row, after_col)):
-                        return True
-            finally:
-                self.grid[e_row][e_col] = EMPTY
-        return False
+        if not in_bounds(cell) or not self._is_free(cell):
+            return False
 
-    def _is_free(self, row, col):
-        """Bout libre : dans le plateau et vide (un bord ou une pierre ferme)."""
-        return self.in_bounds(row, col) and self.grid[row][col] == EMPTY
+        player = self.current_player
+        # Exception du sujet : un double-three introduit par une capture
+        # est autorise.
+        if self._find_captured(cell, player):
+            return True
+
+        return self._count_free_threes(cell.row, cell.column, player) < 2
 
     def winner(self):
         """Renvoie BLACK, WHITE ou None (pas de vainqueur), a partir du
         dernier coup. Ne stocke rien : rien a defaire dans undo."""
+
         if not self.history:
             return None
+
         row, col, _ = self.history[-1]
         mover = self.grid[row][col]
         other = opponent_of(mover)
@@ -190,6 +125,105 @@ class Board:
             return mover
         return None
 
+    def _capture_pairs(
+            self,
+            cell: Cell,
+            player: int
+        ) -> list[Cell]:
+        """Retire les paires adverses encadrees par la pierre posee en
+        (row, col) et renvoie la liste des cases retirees."""
+
+        captured = self._find_captured(cell, player)
+        for cell in captured:
+            self.grid[cell.row][cell.column] = EMPTY
+
+        return captured
+
+    def _find_captured(
+            self,
+            cell: Cell,
+            player: int
+        ) -> list[Cell]:
+        """Cases que capturerait une pierre de `player` posee en (row, col),
+        sans rien modifier. La case (row, col) elle-meme n'est pas lue."""
+
+        opponent = opponent_of(player)
+        captured = []
+        for direction_row, direction_column in DIRECTIONS:
+            end_row = cell.row + 3 * direction_row
+            end_col = cell.column + 3 * direction_column
+            # Ligne droite : si la 3e case est dans le plateau, les deux
+            # premieres le sont aussi. Un seul test de limite par direction.
+            end_cell = Cell(end_row, end_col)
+            if not in_bounds(end_cell):
+                continue
+
+            first_cell = Cell(cell.row + direction_row, cell.column + direction_column)
+            second_cell = Cell(cell.row + 2 * direction_row, cell.column + 2 * direction_column)
+            if (self.get_cell_state(first_cell) == opponent
+                    and self.get_cell_state(second_cell) == opponent
+                    and self.get_cell_state(end_cell) == player):
+                captured.append(first_cell)
+                captured.append(second_cell)
+
+        return captured
+
+    def _count_free_threes(
+            self,
+            row,
+            col,
+            player
+        ) -> int:
+        """Nombre d'axes (sur 4) sur lesquels une pierre de `player` posee
+        en (row, col) cree un free-three. La pierre est posee
+        temporairement, puis retiree."""
+
+        count = 0
+        self.grid[row][col] = player
+        try:
+            for d_row, d_col in AXES:
+                if self._has_free_three(row, col, d_row, d_col, player):
+                    count += 1
+        finally:
+            self.grid[row][col] = EMPTY
+        return count
+
+    def _has_free_three(self, row, col, d_row, d_col, player):
+        """Free-three = il existe une case vide e qui, remplie par `player`,
+        donne un quatre ouvert contenant la pierre en (row, col) et e.
+        Le quatre occupe 4 cases : e est a au plus 3 cases de la pierre."""
+
+        for step in range(-3, 4):
+            if step == 0:
+                continue
+            e_row = row + step * d_row
+            e_col = col + step * d_col
+            if not in_bounds(Cell(e_row, e_col)) or self.grid[e_row][e_col] != EMPTY:
+                continue
+            self.grid[e_row][e_col] = player
+            try:
+                back = self._run_length(row, col, -d_row, -d_col, player)
+                ahead = self._run_length(row, col, d_row, d_col, player)
+                # e doit faire partie de la ligne, qui doit avoir 4 pierres
+                # exactement et ses deux bouts libres.
+                if -back <= step <= ahead and 1 + back + ahead == 4:
+                    previous_cell = Cell(row - (back + 1) * d_row, col - (back + 1) * d_col)
+                    next_cell = Cell(row + (ahead + 1) * d_row, col + (ahead + 1) * d_col)
+                    if (self._is_free(previous_cell)
+                            and self._is_free(next_cell)):
+                        return True
+            finally:
+                self.grid[e_row][e_col] = EMPTY
+        return False
+
+    def _is_free(
+            self,
+            cell: Cell
+        ) -> bool:
+        """Bout libre : dans le plateau et vide (un bord ou une pierre ferme)."""
+
+        return in_bounds(cell) and self.get_cell_state(cell) == EMPTY
+
     def has_five_through(self, row, col):
         """La pierre en (row, col) fait-elle partie d'un alignement de 5 ou
         plus (sur l'un des 4 axes) ?"""
@@ -210,7 +244,7 @@ class Board:
         count = 0
         row += d_row
         col += d_col
-        while self.in_bounds(row, col) and self.grid[row][col] == player:
+        while in_bounds(Cell(row, col)) and self.grid[row][col] == player:
             count += 1
             row += d_row
             col += d_col
@@ -224,9 +258,9 @@ class Board:
         stopper = opponent_of(five_player)
         for row in range(BOARD_SIZE):
             for col in range(BOARD_SIZE):
-                if not self.is_legal(row, col):
+                if not self.is_legal(Cell(row, col)):
                     continue
-                self.play(row, col)
+                self.play(Cell(row, col))
                 captured = self.history[-1][2]
                 stops = bool(captured) and (
                     self.captures[stopper] >= CAPTURES_TO_WIN
@@ -236,8 +270,16 @@ class Board:
                     return True
         return False
 
-    def __str__(self):
-        symbols = {EMPTY: ".", BLACK: "X", WHITE: "O"}
+    def __str__(
+            self
+    ) -> str:
+
+        symbols = {
+            EMPTY: ".",
+            BLACK: "X",
+            WHITE: "O"
+        }
+
         return "\n".join(
             " ".join(symbols[cell] for cell in line) for line in self.grid
         )
