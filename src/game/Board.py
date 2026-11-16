@@ -1,6 +1,6 @@
 """Plateau de Gomoku : grille 19x19, joueur courant, captures et historique."""
-from rules import (
-    BOARD_SIZE,
+from board import (
+    NUMBER_OF_CELLS,
     EMPTY,
     BLACK,
     WHITE,
@@ -22,7 +22,7 @@ class Board:
     ) -> None:
         # grid[row][col] contient EMPTY, BLACK ou WHITE (indices de 0 a 18).
         # Une liste par ligne : [[EMPTY] * N] * N copierait la MEME ligne N fois.
-        self.grid = [[EMPTY] * BOARD_SIZE for _ in range(BOARD_SIZE)]
+        self.grid = [[EMPTY] * NUMBER_OF_CELLS for _ in range(NUMBER_OF_CELLS)]
         self.current_player = BLACK
         # Nombre de pierres capturees PAR chaque joueur (une paire = 2).
         self.captures = {BLACK: 0, WHITE: 0}
@@ -256,8 +256,8 @@ class Board:
         case libre (play puis undo). Appele seulement quand un 5 vient
         d'etre forme, donc rarement. Suppose que c'est a l'adversaire de jouer."""
         stopper = opponent_of(five_player)
-        for row in range(BOARD_SIZE):
-            for col in range(BOARD_SIZE):
+        for row in range(NUMBER_OF_CELLS):
+            for col in range(NUMBER_OF_CELLS):
                 if not self.is_legal(Cell(row, col)):
                     continue
                 self.play(Cell(row, col))

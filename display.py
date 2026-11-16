@@ -1,18 +1,21 @@
-from rules import (
-    BOARD_SIZE,
+from board import (
+    NUMBER_OF_CELLS,
 )
 
 
-CELL = 36            # ecart entre deux intersections (pixels)
+BIG_FONT = 64
+NORMAL_FONT = 30
+SMALL_FONT = 22
+
+CELL_SIZE = 36            # ecart entre deux intersections (pixels)
 MARGIN = 40          # marge autour de la grille
-LAST = MARGIN + (BOARD_SIZE - 1) * CELL        # coordonnee de la derniere ligne
+LAST = MARGIN + (NUMBER_OF_CELLS - 1) * CELL_SIZE        # coordonnee de la derniere ligne
 BOARD_PIXELS = LAST + MARGIN                   # le plateau est un carre
 PANEL_WIDTH = 240                              # panneau d'etat, a droite
 WINDOW_SIZE = (BOARD_PIXELS + PANEL_WIDTH, BOARD_PIXELS)
 STONE_RADIUS = 15
 # Un clic (ou le survol) compte s'il tombe sur l'emplacement de la pierre.
 SNAP_DISTANCE = STONE_RADIUS
-STAR_RADIUS = 4
 FORBIDDEN_RADIUS = 6
 FPS = 60
 

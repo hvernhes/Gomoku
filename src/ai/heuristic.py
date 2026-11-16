@@ -11,10 +11,10 @@ from rewards import (
     THREE_BLOCKED_STONES,
     THREE_OPEN_STONES
 )
-from rules import (
+from board import (
     AXES,
-    BOARD_SIZE,
-    EMPTY,
+    NUMBER_OF_CELLS,
+    EMPTY
 )
 from src.game.Cell import Cell
 from src.helpers.utils import (
@@ -183,8 +183,8 @@ def evaluate_alignments(
 ) -> int:
 
     aligned: list[dict[tuple, dict[str, bool]]] = []
-    for row in range(BOARD_SIZE):
-        for column in range(BOARD_SIZE):
+    for row in range(NUMBER_OF_CELLS):
+        for column in range(NUMBER_OF_CELLS):
             cell = Cell(row, column)
             if get_cell_state(grid, cell) != player:
                 continue
@@ -242,8 +242,8 @@ def evaluate_captures(
 ) -> int:
 
     possible_captures = 0
-    for row in range(BOARD_SIZE):
-        for column in range(BOARD_SIZE):
+    for row in range(NUMBER_OF_CELLS):
+        for column in range(NUMBER_OF_CELLS):
             cell = Cell(row, column)
             if get_cell_state(grid, cell) != player:
                 continue
@@ -287,21 +287,21 @@ def evaluate_center(
 ) -> int:
 
     value = 0
-    for row in range(BOARD_SIZE):
-        for column in range(BOARD_SIZE):
+    for row in range(NUMBER_OF_CELLS):
+        for column in range(NUMBER_OF_CELLS):
             cell = Cell(row, column)
             if get_cell_state(grid, cell) != player:
                 continue
 
             if is_empty_around(grid, cell):
-                if CENTRAL_FAR <= row <= BOARD_SIZE - CENTRAL_FAR \
-                    and CENTRAL_FAR <= column <= BOARD_SIZE - CENTRAL_FAR:
+                if CENTRAL_FAR <= row <= NUMBER_OF_CELLS - CENTRAL_FAR \
+                    and CENTRAL_FAR <= column <= NUMBER_OF_CELLS - CENTRAL_FAR:
                     value += 1
-                if CENTRAL_MEDIUM <= row <= BOARD_SIZE - CENTRAL_MEDIUM \
-                    and CENTRAL_MEDIUM <= column <= BOARD_SIZE - CENTRAL_MEDIUM:
+                if CENTRAL_MEDIUM <= row <= NUMBER_OF_CELLS - CENTRAL_MEDIUM \
+                    and CENTRAL_MEDIUM <= column <= NUMBER_OF_CELLS - CENTRAL_MEDIUM:
                     value += 1
-                if CENTRAL <= row <= BOARD_SIZE - CENTRAL \
-                    and CENTRAL <= column <= BOARD_SIZE - CENTRAL:
+                if CENTRAL <= row <= NUMBER_OF_CELLS - CENTRAL \
+                    and CENTRAL <= column <= NUMBER_OF_CELLS - CENTRAL:
                     value += 1
 
     return value

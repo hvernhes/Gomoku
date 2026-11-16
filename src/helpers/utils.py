@@ -1,6 +1,6 @@
-from rules import (
+from board import (
     BLACK,
-    BOARD_SIZE,
+    NUMBER_OF_CELLS,
     WHITE
 )
 from src.game.Cell import Cell
@@ -19,5 +19,5 @@ def in_bounds(
         cell: Cell
 ) -> bool:
 
-    return 0 <= cell.row < BOARD_SIZE \
-        and 0 <= cell.column < BOARD_SIZE
+    return 0 <= cell.row < NUMBER_OF_CELLS \
+        and 0 <= cell.column < NUMBER_OF_CELLS

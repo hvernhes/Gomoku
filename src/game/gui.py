@@ -1,12 +1,16 @@
 """Interface graphique (pygame-ce) : plateau de Gomoku jouable en hotseat."""
 
 import pygame
+from board import STAR_RADIUS
 from display import (
+    BIG_FONT,
+    NORMAL_FONT,
+    SMALL_FONT,
     BLACK_STONE_COLOR,
     BOARD_COLOR,
     BOARD_PIXELS,
     BUTTON_COLOR,
-    CELL,
+    CELL_SIZE,
     FORBIDDEN_RADIUS,
     FPS,
     GHOST_ALPHA,
@@ -20,17 +24,16 @@ from display import (
     POPUP_TEXT_COLOR,
     RED,
     SNAP_DISTANCE,
-    STAR_RADIUS,
     STONE_RADIUS,
     TEXT_COLOR,
     WINDOW_SIZE,
     WHITE_STONE_COLOR
 )
-from rules import (
+from board import (
     CAPTURES_TO_WIN,
     EMPTY,
     BLACK,
-    BOARD_SIZE,
+    NUMBER_OF_CELLS,
     WHITE
 )
 from src.game.Board import Board
@@ -54,16 +57,16 @@ STAR_POINTS = [(row, col) for row in (3, 9, 15) for col in (3, 9, 15)]
 
 def intersection_to_pixel(row, col):
     """Position en pixels (x, y) d'une intersection (ligne, colonne)."""
-    return MARGIN + col * CELL, MARGIN + row * CELL
+    return MARGIN + col * CELL_SIZE, MARGIN + row * CELL_SIZE
 
 
 def pixel_to_intersection(x, y):
     """Intersection (ligne, colonne) sous le point (x, y), ou None si le
     point est hors du plateau ou trop loin de toute intersection."""
     # Intersection la plus proche (division entiere : pas de cas limite).
-    col = (x - MARGIN + CELL // 2) // CELL
-    row = (y - MARGIN + CELL // 2) // CELL
-    if not (0 <= row < BOARD_SIZE and 0 <= col < BOARD_SIZE):
+    col = (x - MARGIN + CELL_SIZE // 2) // CELL_SIZE
+    row = (y - MARGIN + CELL_SIZE // 2) // CELL_SIZE
+    if not (0 <= row < NUMBER_OF_CELLS and 0 <= col < NUMBER_OF_CELLS):
         return None
     center_x, center_y = intersection_to_pixel(row, col)
     if (x - center_x) ** 2 + (y - center_y) ** 2 > SNAP_DISTANCE ** 2:
@@ -85,8 +88,8 @@ def compute_forbidden(board):
     """Intersections libres interdites au joueur courant (double-three).
     Calcule une fois par coup, pas a chaque image : c'est couteux."""
     return [(row, col)
-            for row in range(BOARD_SIZE)
-            for col in range(BOARD_SIZE)
+            for row in range(NUMBER_OF_CELLS)
+            for col in range(NUMBER_OF_CELLS)
             if board.get_cell_state(Cell(row, col)) == EMPTY and not board.is_legal(Cell(row, col))]
 
 
@@ -122,8 +125,8 @@ def draw_ghost(screen, ghost, row, col):
 
 def draw_board(screen, board, forbidden):
     screen.fill(BOARD_COLOR, (0, 0, BOARD_PIXELS, BOARD_PIXELS))
-    for i in range(BOARD_SIZE):
-        offset = MARGIN + i * CELL
+    for i in range(NUMBER_OF_CELLS):
+        offset = MARGIN + i * CELL_SIZE
         pygame.draw.line(screen, LINE_COLOR, (MARGIN, offset), (LAST, offset))
         pygame.draw.line(screen, LINE_COLOR, (offset, MARGIN), (offset, LAST))
     for row, col in STAR_POINTS:
@@ -132,8 +135,8 @@ def draw_board(screen, board, forbidden):
     for row, col in forbidden:
         pygame.draw.circle(screen, RED, intersection_to_pixel(row, col),
                            FORBIDDEN_RADIUS)
-    for row in range(BOARD_SIZE):
-        for col in range(BOARD_SIZE):
+    for row in range(NUMBER_OF_CELLS):
+        for col in range(NUMBER_OF_CELLS):
             player = board.get_cell_state(Cell(row, col))
             if player != EMPTY:
                 draw_stone(screen, row, col, player)
@@ -194,13 +197,15 @@ def main():
     screen = pygame.display.set_mode(WINDOW_SIZE)
     pygame.display.set_caption("Gomoku")
     fonts = {
-        "big": pygame.font.Font(None, 64),
-        "normal": pygame.font.Font(None, 30),
-        "small": pygame.font.Font(None, 26),
+        "big": pygame.font.Font(None, BIG_FONT),
+        "normal": pygame.font.Font(None, NORMAL_FONT),
+        "small": pygame.font.Font(None, SMALL_FONT),
     }
-    ghosts = {BLACK: make_ghost(BLACK_STONE_COLOR),
-              WHITE: make_ghost(WHITE_STONE_COLOR)}
-    red_ghost = make_ghost(RED)
+    ghosts = {
+        BLACK: make_ghost(BLACK_STONE_COLOR),
+        WHITE: make_ghost(WHITE_STONE_COLOR),
+        "RED": make_ghost(RED)
+    }
     overlay = make_overlay()
     clock = pygame.time.Clock()
     board = Board()
@@ -209,9 +214,11 @@ def main():
 
     running = True
     while running:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 changed = False
                 undo_clicked = (UNDO_BUTTON.collidepoint(event.pos)
@@ -244,7 +251,7 @@ def main():
             hovered = pixel_to_intersection(*pygame.mouse.get_pos())
             if hovered is not None and board.get_cell_state(Cell(*hovered)) == EMPTY:
                 if hovered in forbidden:
-                    draw_ghost(screen, red_ghost, *hovered)
+                    draw_ghost(screen, ghosts["RED"], *hovered)
                 else:
                     draw_ghost(screen, ghosts[board.current_player], *hovered)
         draw_panel(screen, fonts, board, result)
