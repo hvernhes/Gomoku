@@ -9,6 +9,7 @@ from src.ui.board import (
 )
 from src.ui.panel import draw_panel
 from src.ui.popup import draw_popup
+from src.ui.UILayout import UILayout
 
 
 def draw_all_window(
@@ -18,7 +19,8 @@ def draw_all_window(
         result: str | int | None,
         forbidden: list[tuple[int, int]],
         ghosts: dict[str | int, pygame.Surface],
-        overlay: pygame.Surface
+        overlay: pygame.Surface,
+        layout: UILayout
 ) -> None:
 
     draw_board(screen, board, forbidden)
@@ -38,7 +40,7 @@ def draw_all_window(
 
                 draw_ghost(screen, ghost, *hovered)
 
-    draw_panel(screen, fonts, board, result)
+    draw_panel(screen, fonts, board, result, layout)
 
     if result is not None:
-        draw_popup(screen, fonts, overlay, result)
+        draw_popup(screen, fonts, overlay, result, layout)

@@ -1,4 +1,4 @@
-from display import (
+from board import (
     BLACK_STONE_COLOR,
     WHITE_STONE_COLOR
 )

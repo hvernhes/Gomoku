@@ -3,24 +3,21 @@ from board import (
     STAR_POINTS,
     STAR_RADIUS
 )
-from display import (
-    CELL_SIZE,
-    FORBIDDEN_RADIUS,
-    LAST,
-    LINE_COLOR,
-    MARGIN,
-    RED,
-    STONE_RADIUS
-)
 from board import (
     EMPTY,
-    NUMBER_OF_CELLS
+    LINE_COLOR,
+    NUMBER_OF_CELLS,
+    STONE_RADIUS
 )
 from src.game.Board import Board
 from src.game.Cell import Cell
 from src.helpers.computation import intersection_to_pixel
 from src.helpers.ui import get_stone_color
 from window import (
+    BOARD_MARGIN,
+    CELL_SIZE,
+    FORBIDDEN_COLOR,
+    FORBIDDEN_RADIUS,
     PLAYGROUND_COLOR,
     PLAYGROUND_SIZE
 )
@@ -47,7 +44,7 @@ def _draw_forbidden_cells(
     for row, col in forbidden:
         pygame.draw.circle(
             screen,
-            RED,
+            FORBIDDEN_COLOR,
             intersection_to_pixel(row, col),
             FORBIDDEN_RADIUS
         )
@@ -58,10 +55,12 @@ def _draw_grid(
         forbidden: list[tuple[int, int]]
 ) -> None:
 
+    last = BOARD_MARGIN + (NUMBER_OF_CELLS - 1) * CELL_SIZE
+
     for i in range(NUMBER_OF_CELLS):
-        offset = MARGIN + i * CELL_SIZE
-        pygame.draw.line(screen, LINE_COLOR, (MARGIN, offset), (LAST, offset))
-        pygame.draw.line(screen, LINE_COLOR, (offset, MARGIN), (offset, LAST))
+        offset = BOARD_MARGIN + i * CELL_SIZE
+        pygame.draw.line(screen, LINE_COLOR, (BOARD_MARGIN, offset), (last, offset))
+        pygame.draw.line(screen, LINE_COLOR, (offset, BOARD_MARGIN), (offset, last))
 
     _draw_stars(screen)
     _draw_forbidden_cells(screen, forbidden)

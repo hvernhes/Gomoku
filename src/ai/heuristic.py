@@ -1,9 +1,7 @@
 from heuristic import (
     CENTRAL,
     CENTRAL_MEDIUM,
-    CENTRAL_FAR
-)
-from rewards import (
+    CENTRAL_FAR,
     FIVE_OPEN_STONES,
     FOUR_BLOCKED_STONES,
     FOUR_OPEN_STONES,
