@@ -6,9 +6,7 @@ from src.ui.UILayout import UILayout
 from window import (
     PLAYGROUND_SIZE,
     POPUP_COLOR,
-    POPUP_HEIGHT,
     POPUP_TEXT_COLOR,
-    POPUP_WIDTH
 )
 
 
@@ -30,7 +28,8 @@ def _draw_popup_window(
         label,
         label.get_rect(
             center=(popup_rectangle.centerx, popup_rectangle.top + 60)
-    ))
+        )
+    )
 
 
 def _draw_buttons(

@@ -88,7 +88,11 @@ def main():
 
             if changed:
                 result = compute_result(board)
-                forbidden = [] if result is not None else compute_forbidden(board)
+                forbidden = (
+                    []
+                    if result is not None
+                    else compute_forbidden(board)
+                )
 
             if not running:
                 break

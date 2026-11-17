@@ -21,43 +21,17 @@ from src.helpers.utils import (
 )
 
 
-def start_of_alignment(
-        grid: list[list[int]],
-        empty_cell: Cell,
-        direction: tuple[int],
-        opponent: int,
-) -> int:
-
-    next_cell = Cell(
-        empty_cell.row + direction[0],
-        empty_cell.column + direction[1]
-    )
-    state = get_cell_state(grid, next_cell)
-    if state == opponent or state == EMPTY:
-        return -1
-
-    opposite_cell = Cell(
-        empty_cell.row - direction[0] * 2,
-        empty_cell.column - direction[1] * 2
-    )
-    state = get_cell_state(grid, opposite_cell)
-    if state == opponent or state == EMPTY:
-        return 1
-
-    return 0
-
-
 def get_alignment_properties(
         grid: list[list[int]],
         starting_cell: Cell,
         direction: tuple[int],
         player: int,
-        opponent: int  
-) -> tuple[set[tuple[int]], bool]:
+        opponent: int
+) -> tuple[set[tuple[int, int]], bool]:
 
     cells = set({(starting_cell.row, starting_cell.column)})
-
     empty = False
+
     for i in range(1, 5):
         adjacent_cell = Cell(
             starting_cell.row + i * direction[0],
@@ -67,7 +41,7 @@ def get_alignment_properties(
 
         if state == player:
             cells.add((adjacent_cell.row, adjacent_cell.column))
-        elif state == opponent:
+        elif state is None or state == opponent:
             break
         elif state == EMPTY and not empty:
             empty = True
@@ -89,7 +63,7 @@ def start_of_alignment(
         empty_cell.column + direction[1]
     )
     state = get_cell_state(grid, next_cell)
-    if state == opponent or state == EMPTY:
+    if state is None or state == opponent or state == EMPTY:
         return -1
 
     opposite_cell = Cell(
@@ -97,7 +71,7 @@ def start_of_alignment(
         empty_cell.column - direction[1] * 2
     )
     state = get_cell_state(grid, opposite_cell)
-    if state == opponent or state == EMPTY:
+    if state is None or state == opponent or state == EMPTY:
         return 1
 
     return 0
@@ -107,7 +81,7 @@ def get_alignment(
         grid: list[list[int]],
         starting_cell: Cell,
         player: int
-) -> dict[dict[str, bool]]:
+) -> dict[frozenset[tuple[int, int]], dict[str, bool]]:
 
     alignment: dict[dict[str, bool]] = {}
 
@@ -134,8 +108,9 @@ def get_alignment(
             }
 
         elif state == EMPTY:
-            if (sign := start_of_alignment(grid, adjacent_cell, direction, opponent)):
-                good_direction = (direction[0] * sign, direction[1] * sign)     
+            sign = start_of_alignment(grid, adjacent_cell, direction, opponent)
+            if (sign != 0):
+                good_direction = (direction[0] * sign, direction[1] * sign)
                 cells, hole = get_alignment_properties(
                     grid,
                     starting_cell,
@@ -149,7 +124,7 @@ def get_alignment(
                 }
 
     return alignment
-    
+
 
 def compute_alignment_score(
         aligned: list[dict[tuple, dict[str, bool]]]
@@ -222,13 +197,18 @@ def get_capture_possibilities(
                     break
                 concerned_cells.append(cell)
 
+            if not len(concerned_cells) == 3:
+                continue
+
             cell_states: list[int] = []
             for cell in concerned_cells:
                 cell_states.append(get_cell_state(grid, cell))
 
-            if cell_states[0] == opponent \
-                and cell_states[1] == opponent \
-                and cell_states[2] == EMPTY:
+            if (
+                cell_states[0] == opponent
+                and cell_states[1] == opponent
+                and cell_states[2] == EMPTY
+            ):
                 count += 1
 
     return count
@@ -269,11 +249,11 @@ def is_empty_around(
                 cell.row + sign * direction[0],
                 cell.column + sign * direction[1]
             )
-            if not in_bounds(cell):
-                return False
-
             adjacent_cell_state = get_cell_state(grid, adjacent_cell)
-            if adjacent_cell_state != EMPTY:
+            if (
+                adjacent_cell_state is None
+                or adjacent_cell_state != EMPTY
+            ):
                 return False
 
     return True
@@ -292,14 +272,20 @@ def evaluate_center(
                 continue
 
             if is_empty_around(grid, cell):
-                if CENTRAL_FAR <= row <= NUMBER_OF_CELLS - CENTRAL_FAR \
-                    and CENTRAL_FAR <= column <= NUMBER_OF_CELLS - CENTRAL_FAR:
+                if (
+                    CENTRAL_FAR <= row <= NUMBER_OF_CELLS - CENTRAL_FAR
+                    and CENTRAL_FAR <= column <= NUMBER_OF_CELLS - CENTRAL_FAR
+                ):
                     value += 1
-                if CENTRAL_MEDIUM <= row <= NUMBER_OF_CELLS - CENTRAL_MEDIUM \
-                    and CENTRAL_MEDIUM <= column <= NUMBER_OF_CELLS - CENTRAL_MEDIUM:
+                if (
+                    CENTRAL_MEDIUM <= row <= NUMBER_OF_CELLS - CENTRAL_MEDIUM
+                    and CENTRAL_MEDIUM <= column <= NUMBER_OF_CELLS - CENTRAL_MEDIUM
+                ):
                     value += 1
-                if CENTRAL <= row <= NUMBER_OF_CELLS - CENTRAL \
-                    and CENTRAL <= column <= NUMBER_OF_CELLS - CENTRAL:
+                if (
+                    CENTRAL <= row <= NUMBER_OF_CELLS - CENTRAL
+                    and CENTRAL <= column <= NUMBER_OF_CELLS - CENTRAL
+                ):
                     value += 1
 
     return value
@@ -353,7 +339,9 @@ def evaluation(
 def get_cell_state(
         grid: list[list[int]],
         cell: Cell
-) -> int:
-    # Pas de verification : un indice negatif lirait l'autre bout de la
-    # liste sans erreur. L'appelant doit tester in_bounds avant.
+) -> int | None:
+
+    if not in_bounds(cell):
+        return None
+
     return grid[cell.row][cell.column]

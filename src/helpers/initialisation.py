@@ -54,7 +54,10 @@ def _make_ghost(color):
 
 
 def _make_overlay():
-    overlay = pygame.Surface((PLAYGROUND_SIZE, PLAYGROUND_SIZE), pygame.SRCALPHA)
+    overlay = pygame.Surface(
+        (PLAYGROUND_SIZE, PLAYGROUND_SIZE),
+        pygame.SRCALPHA
+    )
     overlay.fill(OVERLAY_COLOR)
     return overlay
 
@@ -62,14 +65,29 @@ def _make_overlay():
 def _initialize_ui_layout(
 ) -> UILayout:
 
-    undo_panel_button = pygame.Rect(PLAYGROUND_SIZE + PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH - PANEL_MARGIN * 2, 50)
+    undo_panel_button = pygame.Rect(
+        PLAYGROUND_SIZE + PANEL_MARGIN,
+        PANEL_MARGIN,
+        PANEL_WIDTH - PANEL_MARGIN * 2,
+        50
+    )
     popup_rectangle = pygame.Rect(0, 0, POPUP_WIDTH, POPUP_HEIGHT)
     popup_rectangle.center = (
         PLAYGROUND_SIZE // 2,
         PLAYGROUND_SIZE // 2
     )
-    popup_undo_button = pygame.Rect(popup_rectangle.left + 30, popup_rectangle.bottom - 70, 150, 44)
-    popup_restart_button = pygame.Rect(popup_undo_button.right + 20, popup_undo_button.top, 150, 44)
+    popup_undo_button = pygame.Rect(
+        popup_rectangle.left + 30,
+        popup_rectangle.bottom - 70,
+        150,
+        44
+    )
+    popup_restart_button = pygame.Rect(
+        popup_undo_button.right + 20,
+        popup_undo_button.top,
+        150,
+        44
+    )
 
     return UILayout(
         undo_panel_button,

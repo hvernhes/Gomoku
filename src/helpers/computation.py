@@ -46,7 +46,10 @@ def compute_forbidden(board):
     return [(row, col)
             for row in range(NUMBER_OF_CELLS)
             for col in range(NUMBER_OF_CELLS)
-            if board.get_cell_state(Cell(row, col)) == EMPTY and not board.is_legal(Cell(row, col))]
+            if (
+                board.get_cell_state(Cell(row, col)) == EMPTY
+                and not board.is_legal(Cell(row, col))
+            )]
 
 
 def compute_result(board):

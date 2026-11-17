@@ -59,13 +59,23 @@ def _draw_grid(
 
     for i in range(NUMBER_OF_CELLS):
         offset = BOARD_MARGIN + i * CELL_SIZE
-        pygame.draw.line(screen, LINE_COLOR, (BOARD_MARGIN, offset), (last, offset))
-        pygame.draw.line(screen, LINE_COLOR, (offset, BOARD_MARGIN), (offset, last))
+        pygame.draw.line(
+            screen,
+            LINE_COLOR,
+            (BOARD_MARGIN, offset),
+            (last, offset)
+        )
+        pygame.draw.line(
+            screen,
+            LINE_COLOR,
+            (offset, BOARD_MARGIN),
+            (offset, last)
+        )
 
     _draw_stars(screen)
     _draw_forbidden_cells(screen, forbidden)
 
-    
+
 def draw_stone(
         screen: pygame.Surface,
         row: int,

@@ -10,7 +10,6 @@ from src.helpers.ui import (
     get_stone_color
 )
 from src.ui.button import draw_button
-from src.ui.popup import draw_button
 from src.ui.UILayout import UILayout
 from window import (
     PLAYGROUND_SIZE,
@@ -45,7 +44,12 @@ def _draw_player_to_play(
 
     if result is None:
         center = (x + 12, 145)
-        pygame.draw.circle(screen, get_stone_color(board.current_player), center, 12)
+        pygame.draw.circle(
+            screen,
+            get_stone_color(board.current_player),
+            center,
+            12
+        )
         pygame.draw.circle(screen, TEXT_COLOR, center, 12, 1)
         text = f"{get_player_name(board.current_player)} to play"
     else:
@@ -65,7 +69,10 @@ def _draw_captures(
     title = fonts["normal"].render("Captures", True, TEXT_COLOR)
     screen.blit(title, (x, 210))
     for i, player in enumerate((BLACK, WHITE)):
-        line = f"{get_player_name(player)}: {board.captures[player]} / {CAPTURES_TO_WIN}"
+        line = (
+            f"{get_player_name(player)}: \
+                {board.captures[player]} / {CAPTURES_TO_WIN}"
+        )
         label = fonts["small"].render(line, True, TEXT_COLOR)
         screen.blit(label, (x, 245 + 30 * i))
 
@@ -78,7 +85,10 @@ def draw_panel(
         layout: UILayout
 ) -> None:
 
-    screen.fill(PANEL_COLOR, (PLAYGROUND_SIZE, 0, PANEL_WIDTH, PLAYGROUND_SIZE))
+    screen.fill(
+        PANEL_COLOR,
+        (PLAYGROUND_SIZE, 0, PANEL_WIDTH, PLAYGROUND_SIZE)
+    )
 
     x = PLAYGROUND_SIZE + PANEL_MARGIN
     _draw_undo_button(screen, fonts["normal"], layout.undo_panel_button)
