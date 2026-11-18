@@ -1,7 +1,7 @@
+import pytest
 from board import (
-    NUMBER_OF_CELLS,
-    EMPTY,
-    BLACK
+    BLACK,
+    WHITE
 )
 from heuristic import (
     CENTRAL,
@@ -14,29 +14,67 @@ from heuristic import (
     THREE_BLOCKED_STONES,
     THREE_OPEN_STONES
 )
-
 from src.ai.heuristic import evaluate_alignments
+from tests.utils import (
+    create_empty_grid,
+    create_line,
+    place_stones
+)
 
 
-GRID = [
-    [EMPTY] * NUMBER_OF_CELLS
-    for _ in range(NUMBER_OF_CELLS)
-]
-
-
-def test_alignments_of_free(
-) -> None:
-
-    grid = GRID.copy()
-    contiguous_cells = [
-        (9, 9),
-        (10, 10),
-        (11, 11)
+@pytest.mark.parametrize(
+    "start, direction",
+    [
+        ((9, 8), (0, 1)),
+        ((8, 9), (1, 0)),
+        ((8, 8), (1, 1)),
+        ((8, 10), (1, -1))
     ]
+)
+def test_three_open_stones(start, direction):
+    grid = create_empty_grid()
 
-    for cell in contiguous_cells:
-        grid[cell[0]][cell[1]] = BLACK
+    cells = create_line(start, direction, 3)
+    place_stones(grid, cells, BLACK)
 
     score = evaluate_alignments(grid, BLACK)
 
     assert score == THREE_OPEN_STONES
+
+
+@pytest.mark.parametrize(
+    "opponent_cell",
+    [
+        (9, 7),
+        (9, 11)
+    ]
+)
+def test_three_blocked_stones(opponent_cell):
+    grid = create_empty_grid()
+
+    place_stones(grid, [(9, 8), (9, 9), (9, 10)], BLACK)
+    grid[opponent_cell[0]][opponent_cell[1]] = WHITE
+
+    score = evaluate_alignments(grid, BLACK)
+
+    assert score == THREE_BLOCKED_STONES
+
+
+@pytest.mark.parametrize(
+    "start, direction",
+    [
+        ((9, 8), (0, 1)),
+        ((8, 9), (1, 0)),
+        ((8, 8), (1, 1)),
+        ((8, 10), (1, -1))
+    ]
+)
+def test_four_open_stones(start, direction):
+    grid = create_empty_grid()
+
+    cells = create_line(start, direction, 4)
+    place_stones(grid, cells, BLACK)
+
+    score = evaluate_alignments(grid, BLACK)
+
+    assert score == FOUR_OPEN_STONES
