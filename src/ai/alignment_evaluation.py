@@ -28,9 +28,8 @@ def _get_alignment_properties(
     cells = set({(starting_cell.row, starting_cell.column)})
     empty = False
     free = False
-    blocked = False
 
-    for i in range(1, 5):
+    for i in range(1, 6):
         adjacent_cell = Cell(
             starting_cell.row + i * direction[0],
             starting_cell.column + i * direction[1]
@@ -48,8 +47,8 @@ def _get_alignment_properties(
                 adjacent_cell.row + direction[0],
                 adjacent_cell.column + direction[1]
             )
-            state = get_cell_state(grid, second_adjacent_cell)
-            if state == EMPTY:
+            second_adjacent_cell_state = get_cell_state(grid, second_adjacent_cell)
+            if second_adjacent_cell_state == EMPTY:
                 free = True
                 break
             if not empty:
@@ -58,7 +57,7 @@ def _get_alignment_properties(
                 free = True
                 break
 
-    return (cells, empty, free, blocked)
+    return (cells, empty, free)
 
 
 def _start_of_alignment(
@@ -99,7 +98,7 @@ def _add_alignment(
         received_free: bool
 ) -> None:
 
-    cells, hole, free, blocked = _get_alignment_properties(
+    cells, hole, free = _get_alignment_properties(
         grid,
         starting_cell,
         direction,
@@ -110,8 +109,7 @@ def _add_alignment(
     if len(cells) >= 3:
         alignment[frozenset(cells)] = {
             "hole": hole,
-            "free": received_free and free,
-            "blocked": blocked
+            "free": received_free and free
         }
 
 
@@ -253,8 +251,6 @@ def _get_alignment(
                 opponent,
             )
 
-
-    print(alignment)
     return alignment
 
 
@@ -265,14 +261,15 @@ def _compute_alignment_score(
     score = 0
 
     for cells, properties in aligned.items():
-        if len(cells) >= 5:
+        if len(cells) >= 5 and not properties["hole"]:
             score += FIVE_OPEN_STONES
 
-        elif len(cells) == 4:
+        elif len(cells) >= 4:
             if properties["free"]:
                 score += FOUR_OPEN_STONES
             else:
                 score += FOUR_BLOCKED_STONES
+
         elif len(cells) == 3:
             if properties["free"]:
                 score += THREE_OPEN_STONES

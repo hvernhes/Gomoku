@@ -2,6 +2,7 @@ from board import (
     NUMBER_OF_CELLS,
     EMPTY
 )
+from src.helpers.utils import opponent_of
 
 
 def create_empty_grid(
@@ -36,3 +37,22 @@ def create_line(
         )
         for i in range(length)
     ]
+
+
+def create_capture_configuration(
+        grid: list[list[int]],
+        starting_cell: tuple[int, int],
+        direction: tuple[int, int],
+        player: int
+):
+
+    opponent = opponent_of(player)
+
+    place_stones(grid, [starting_cell], player)
+
+    first_opponent_cell = (
+        starting_cell[0] + direction[0],
+        starting_cell[1] + direction[1]
+    )
+    opponent_cells = create_line(first_opponent_cell, direction, 2)
+    place_stones(grid, opponent_cells, opponent)
