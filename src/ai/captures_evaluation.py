@@ -3,13 +3,36 @@ from board import (
     NUMBER_OF_CELLS,
     EMPTY
 )
-from heuristic import STONE_CAPTURE
+from heuristic import (
+    CAPTURE_ONE,
+    CAPTURE_TWO,
+    CAPTURE_THREE,
+    CAPTURE_FOUR,
+    CAPTURE_FIVE,
+    STONE_CAPTURE
+)
 from src.game.Cell import Cell
 from src.helpers.utils import (
     get_cell_state,
     in_bounds,
     opponent_of
 )
+
+
+def _evaluate_capture_count(
+        captures: int
+) -> int:
+
+    scores = {
+        0: 0,
+        1: CAPTURE_ONE,
+        2: CAPTURE_TWO,
+        3: CAPTURE_THREE,
+        4: CAPTURE_FOUR,
+        5: CAPTURE_FIVE
+    }
+
+    return scores[captures]
 
 
 def _get_capture_possibilities(
@@ -51,7 +74,7 @@ def _get_capture_possibilities(
     return count
 
 
-def evaluate_captures(
+def _evaluate_capture_opportunities(
         grid: list[list[int]],
         player: int
 ) -> int:
@@ -69,6 +92,18 @@ def evaluate_captures(
                 player
             )
 
-    score = possible_captures * STONE_CAPTURE
+    return possible_captures * STONE_CAPTURE
+
+
+def evaluate_captures(
+        grid: list[list[int]],
+        captures: int,
+        player: int
+) -> int:
+
+    score = 0
+
+    score += _evaluate_capture_count(captures)
+    score += _evaluate_capture_opportunities(grid, player)
 
     return score

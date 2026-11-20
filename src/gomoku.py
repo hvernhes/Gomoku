@@ -41,7 +41,7 @@ def handle_click(
                 player = board.current_player
                 board.play(cell)
 
-                value = evaluation(board.grid, player)
+                value = evaluation(board.grid, board.captures, player)
                 print(value)
 
                 changed = True

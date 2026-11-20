@@ -6,13 +6,14 @@ from src.helpers.utils import opponent_of
 
 def evaluate_player(
         grid: list[list[int]],
+        captures: int,
         player: int
 ) -> int:
 
     score = 0
 
     score += evaluate_alignments(grid, player)
-    score += evaluate_captures(grid, player)
+    score += evaluate_captures(grid, captures, player)
     score += evaluate_center(grid, player)
 
     return score
@@ -20,20 +21,9 @@ def evaluate_player(
 
 def evaluation(
         grid: list[list[int]],
+        captures: dict[int, int],
         player: int
 ) -> float:
-    """
-    Ce qui rapporte des points:
-        - free three in a row
-        - half free four in a row
-        - free four in a row
-        - five in a row (-> presque victoire)
-        - possibility of capture
-        - possibility of capture (-> count 4)
-        - possibility of capture (-> count 5) -> victoire
-
-    five in a row, four in a row, three in a row, central cell, capture
-    """
 
     opponent = opponent_of(player)
 
@@ -43,7 +33,7 @@ def evaluation(
     # if has_won(board, opponent):
     #     return -WIN_SCORE
 
-    player_score = evaluate_player(grid, player)
-    opponent_score = evaluate_player(grid, opponent)
+    player_score = evaluate_player(grid, captures[player], player)
+    opponent_score = evaluate_player(grid, captures[opponent], opponent)
 
     return player_score - opponent_score

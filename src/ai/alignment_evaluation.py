@@ -1,8 +1,10 @@
 from heuristic import (
     FIVE_OPEN_STONES,
     FOUR_BLOCKED_STONES,
+    FOUR_HALF_BLOCKED_STONES,
     FOUR_OPEN_STONES,
     THREE_BLOCKED_STONES,
+    THREE_HALF_BLOCKED_STONES,
     THREE_OPEN_STONES
 )
 from board import (
@@ -27,7 +29,7 @@ def _get_alignment_properties(
 
     cells = set({(starting_cell.row, starting_cell.column)})
     empty = False
-    free = False
+    second_blocked_end = False
 
     for i in range(1, 6):
         adjacent_cell = Cell(
@@ -40,6 +42,7 @@ def _get_alignment_properties(
             cells.add((adjacent_cell.row, adjacent_cell.column))
 
         elif state is None or state == opponent:
+            second_blocked_end = True
             break
 
         elif state == EMPTY:
@@ -49,15 +52,13 @@ def _get_alignment_properties(
             )
             second_adjacent_cell_state = get_cell_state(grid, second_adjacent_cell)
             if second_adjacent_cell_state == EMPTY:
-                free = True
                 break
             if not empty:
                 empty = True
             else:
-                free = True
                 break
 
-    return (cells, empty, free)
+    return (cells, empty, second_blocked_end)
 
 
 def _start_of_alignment(
@@ -72,7 +73,10 @@ def _start_of_alignment(
         starting_cell.column + direction[1] * 2
     )
     next_cell_state = get_cell_state(grid, next_cell)
-    if next_cell_state != player:
+
+    if next_cell_state == EMPTY:
+        return (-1, False)
+    elif next_cell_state != player:
         return (-1, True)
 
     opposite_cell = Cell(
@@ -81,24 +85,24 @@ def _start_of_alignment(
     )
     opposite_cell_state = get_cell_state(grid, opposite_cell)
     if opposite_cell_state == EMPTY:
-        return (1, True)
-    elif opposite_cell_state != player:
         return (1, False)
+    elif opposite_cell_state != player:
+        return (1, True)
 
-    return (0, False)
+    return (0, True)
 
 
 def _add_alignment(
-        alignment: dict[frozenset[tuple[int, int]], dict[str, bool]],
+        alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
         grid: list[list[int]],
         starting_cell: Cell,
         direction: tuple[int, int],
         player: int,
         opponent: int,
-        received_free: bool
+        first_end_blocked: bool
 ) -> None:
 
-    cells, hole, free = _get_alignment_properties(
+    cells, hole, second_end_blocked = _get_alignment_properties(
         grid,
         starting_cell,
         direction,
@@ -108,13 +112,13 @@ def _add_alignment(
 
     if len(cells) >= 3:
         alignment[frozenset(cells)] = {
-            "hole": hole,
-            "free": received_free and free
+            "broken": hole,
+            "free": 2 - first_end_blocked - second_end_blocked
         }
 
 
 def _handle_blocked_adjacent_cell(
-        alignment: dict[frozenset[tuple[int, int]], dict[str, bool]],
+        alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
         grid: list[list[int]],
         starting_cell: Cell,
         direction: tuple[int, int],
@@ -130,12 +134,12 @@ def _handle_blocked_adjacent_cell(
         opposite_direction,
         player,
         opponent,
-        received_free=False
+        first_end_blocked=True
     )
 
 
 def _handle_empty_adjacent_cell(
-        alignment: dict[frozenset[tuple[int, int]], dict[str, bool]],
+        alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
         grid: list[list[int]],
         starting_cell: Cell,
         direction: tuple[int, int],
@@ -143,7 +147,7 @@ def _handle_empty_adjacent_cell(
         opponent: int,
 ) -> None:
 
-    sign, free = _start_of_alignment(grid, starting_cell, direction, player)
+    sign, blocked = _start_of_alignment(grid, starting_cell, direction, player)
 
     if (sign != 0):
         good_direction = (direction[0] * sign, direction[1] * sign)
@@ -154,12 +158,12 @@ def _handle_empty_adjacent_cell(
             good_direction,
             player,
             opponent,
-            received_free=free
+            first_end_blocked=blocked
         )
 
 
 def _handle_same_player_adjacent_cell(
-        alignment: dict[frozenset[tuple[int, int]], dict[str, bool]],
+        alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
         grid: list[list[int]],
         starting_cell: Cell,
         direction: tuple[int, int],
@@ -182,7 +186,7 @@ def _handle_same_player_adjacent_cell(
             direction,
             player,
             opponent,
-            received_free=False
+            first_end_blocked=True
         )
 
     elif opposite_cell_state == EMPTY:
@@ -200,7 +204,7 @@ def _handle_same_player_adjacent_cell(
                 direction,
                 player,
                 opponent,
-                received_free=True
+                first_end_blocked=False
             )
 
 
@@ -208,9 +212,9 @@ def _get_alignment(
         grid: list[list[int]],
         starting_cell: Cell,
         player: int
-) -> dict[frozenset[tuple[int, int]], dict[str, bool]]:
+) -> dict[frozenset[tuple[int, int]], dict[str, bool | int]]:
 
-    alignment: dict[frozenset[tuple[int, int]], dict[str, bool]] = {}
+    alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]] = {}
     opponent = opponent_of(player)
 
     for direction in AXES:
@@ -255,24 +259,28 @@ def _get_alignment(
 
 
 def _compute_alignment_score(
-        aligned: list[dict[tuple, dict[str, bool]]]
+        aligned: dict[frozenset[tuple[int, int]], dict[str, bool | int]]
 ) -> int:
 
     score = 0
 
     for cells, properties in aligned.items():
-        if len(cells) >= 5 and not properties["hole"]:
+        if len(cells) >= 5 and not properties["broken"]:
             score += FIVE_OPEN_STONES
 
         elif len(cells) >= 4:
-            if properties["free"]:
+            if properties["free"] == 2 and not properties["broken"]:
                 score += FOUR_OPEN_STONES
+            elif properties["free"] == 1 or properties["broken"] or len(cells) >= 5:          
+                score += FOUR_HALF_BLOCKED_STONES
             else:
                 score += FOUR_BLOCKED_STONES
 
         elif len(cells) == 3:
-            if properties["free"]:
+            if properties["free"] == 2:
                 score += THREE_OPEN_STONES
+            elif properties["free"] == 1:          
+                score += THREE_HALF_BLOCKED_STONES
             else:
                 score += THREE_BLOCKED_STONES
 
@@ -284,7 +292,7 @@ def evaluate_alignments(
         player: int
 ) -> int:
 
-    aligned: dict[frozenset[tuple[int, int]], dict[str, bool]] = {}
+    aligned: dict[frozenset[tuple[int, int]], dict[str, bool | int]] = {}
 
     for row in range(NUMBER_OF_CELLS):
         for column in range(NUMBER_OF_CELLS):

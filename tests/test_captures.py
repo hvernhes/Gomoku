@@ -38,7 +38,7 @@ def test_one_possible_capture_in_each_direction(
         WHITE
     )
 
-    score = evaluate_captures(grid, WHITE)
+    score = evaluate_captures(grid, 0, WHITE)
 
     assert score == STONE_CAPTURE
 
@@ -62,7 +62,7 @@ def test_multiple_possible_captures_from_one_stone(
             WHITE
         )
 
-    score = evaluate_captures(grid, WHITE)
+    score = evaluate_captures(grid, 0, WHITE)
 
     assert score == 3 * STONE_CAPTURE
 
@@ -85,7 +85,7 @@ def test_possible_captures_from_different_player_stones(
         WHITE
     )
 
-    score = evaluate_captures(grid, WHITE)
+    score = evaluate_captures(grid, 0, WHITE)
 
     assert score == 2 * STONE_CAPTURE
 
@@ -117,7 +117,7 @@ def test_no_capture_with_invalid_pattern(
     place_stones(grid, opponent_cells, BLACK)
     place_stones(grid, extra_cells, WHITE)
 
-    score = evaluate_captures(grid, WHITE)
+    score = evaluate_captures(grid, 0, WHITE)
 
     assert score == 0
 
@@ -130,7 +130,7 @@ def test_no_capture_out_of_bounds(
     place_stones(grid, [(0, 0)], WHITE)
     place_stones(grid, [(0, 1), (0, 2)], BLACK)
 
-    score = evaluate_captures(grid, WHITE)
+    score = evaluate_captures(grid, 0, WHITE)
 
     assert score == STONE_CAPTURE
 
@@ -147,6 +147,6 @@ def test_no_capture_when_pattern_goes_out_of_bounds(
         WHITE
     )
 
-    score = evaluate_captures(grid, WHITE)
+    score = evaluate_captures(grid, 0, WHITE)
 
     assert score == 0
