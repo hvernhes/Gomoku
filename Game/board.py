@@ -20,6 +20,10 @@ AXES = [(0, 1), (1, 0), (1, 1), (1, -1)]
 ALIGN_TO_WIN = 5
 CAPTURES_TO_WIN = 10
 
+# Issue d'une partie finie sans vainqueur (plateau plein), renvoyee par
+# Board.result() a la place de BLACK / WHITE.
+DRAW = "draw"
+
 
 def opponent_of(player):
     if player == BLACK:
@@ -63,6 +67,37 @@ class Board:
         if self._find_captured(row, col, player):
             return True
         return self._count_free_threes(row, col, player) < 2
+
+    def legal_moves(self):
+        """Liste de tous les coups legaux pour le joueur courant, ligne par
+        ligne. Appelle is_legal sur chaque case : cher, a optimiser plus
+        tard (par exemple en se limitant aux coups candidats)."""
+        return [(row, col)
+                for row in range(BOARD_SIZE)
+                for col in range(BOARD_SIZE)
+                if self.is_legal(row, col)]
+
+    def forbidden_moves(self):
+        """Cases vides interdites au joueur courant (double-three). Cher :
+        un appel a is_legal par case vide, a ne pas refaire a chaque image."""
+        return [(row, col)
+                for row in range(BOARD_SIZE)
+                for col in range(BOARD_SIZE)
+                if self.grid[row][col] == EMPTY and not self.is_legal(row, col)]
+
+    def result(self):
+        """BLACK ou WHITE (vainqueur), DRAW (plateau plein sans vainqueur),
+        ou None si la partie continue."""
+        winner = self.winner()
+        if winner is not None:
+            return winner
+        if self.is_full():
+            return DRAW
+        return None
+
+    def is_terminal(self):
+        """La partie est-elle finie : un vainqueur, ou plateau plein ?"""
+        return self.result() is not None
 
     def play(self, row, col):
         if not self.is_legal(row, col):

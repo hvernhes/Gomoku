@@ -1,8 +1,10 @@
-"""Interface graphique (pygame-ce) : plateau de Gomoku jouable en hotseat."""
+"""Affichage (pygame-ce) : dessin du plateau, du panneau et de la popup, et
+conversion pixels <-> intersections. La partie elle-meme tourne dans main.py."""
 
 import pygame
 
-from board import (BLACK, BOARD_SIZE, CAPTURES_TO_WIN, EMPTY, WHITE, Board)
+from Game.board import (BLACK, BOARD_SIZE, CAPTURES_TO_WIN, DRAW, EMPTY,
+                        WHITE)
 
 CELL = 36            # ecart entre deux intersections (pixels)
 MARGIN = 40          # marge autour de la grille
@@ -38,8 +40,6 @@ POPUP_RECT.center = (BOARD_PIXELS // 2, BOARD_PIXELS // 2)
 POPUP_UNDO = pygame.Rect(POPUP_RECT.left + 30, POPUP_RECT.bottom - 70, 150, 44)
 POPUP_RESTART = pygame.Rect(POPUP_UNDO.right + 20, POPUP_UNDO.top, 150, 44)
 
-DRAW = "draw"        # resultat : match nul (plateau plein, pas de vainqueur)
-
 # Les 9 points reperes d'un goban 19x19, en (ligne, colonne).
 STAR_POINTS = [(row, col) for row in (3, 9, 15) for col in (3, 9, 15)]
 
@@ -61,25 +61,6 @@ def pixel_to_intersection(x, y):
     if (x - center_x) ** 2 + (y - center_y) ** 2 > SNAP_DISTANCE ** 2:
         return None
     return row, col
-
-
-def compute_result(board):
-    """BLACK, WHITE, DRAW (plateau plein) ou None si la partie continue."""
-    winner = board.winner()
-    if winner is not None:
-        return winner
-    if board.is_full():
-        return DRAW
-    return None
-
-
-def compute_forbidden(board):
-    """Intersections libres interdites au joueur courant (double-three).
-    Calcule une fois par coup, pas a chaque image : c'est couteux."""
-    return [(row, col)
-            for row in range(BOARD_SIZE)
-            for col in range(BOARD_SIZE)
-            if board.get(row, col) == EMPTY and not board.is_legal(row, col)]
 
 
 def stone_color(player):
@@ -137,7 +118,7 @@ def draw_button(screen, fonts, rect, text):
     screen.blit(label, label.get_rect(center=rect.center))
 
 
-def draw_panel(screen, fonts, board, result):
+def draw_panel(screen, fonts, board, result, ai_player, ai_times, thinking):
     screen.fill(PANEL_COLOR, (BOARD_PIXELS, 0, PANEL_WIDTH, BOARD_PIXELS))
     draw_button(screen, fonts, UNDO_BUTTON, "Undo")
 
@@ -147,7 +128,10 @@ def draw_panel(screen, fonts, board, result):
         center = (x + 12, 145)
         pygame.draw.circle(screen, stone_color(board.current_player), center, 12)
         pygame.draw.circle(screen, TEXT_COLOR, center, 12, 1)
-        text = f"{player_name(board.current_player)} to play"
+        if thinking:
+            text = "AI thinking..."
+        else:
+            text = f"{player_name(board.current_player)} to play"
     else:
         text = "Game over"
     label = fonts["normal"].render(text, True, TEXT_COLOR)
@@ -160,6 +144,21 @@ def draw_panel(screen, fonts, board, result):
         line = f"{player_name(player)}: {board.captures[player]} / {CAPTURES_TO_WIN}"
         label = fonts["small"].render(line, True, TEXT_COLOR)
         screen.blit(label, (x, 245 + 30 * i))
+
+    # Temps de reflexion de l'IA : dernier coup et moyenne (le sujet exige
+    # une moyenne inferieure a 0,5 s).
+    if ai_player is not None:
+        title = fonts["normal"].render("AI time", True, TEXT_COLOR)
+        screen.blit(title, (x, 330))
+        if ai_times:
+            last = f"Last: {ai_times[-1]:.2f} s"
+            average = f"Average: {sum(ai_times) / len(ai_times):.2f} s"
+        else:
+            last = "Last: -"
+            average = "Average: -"
+        for i, line in enumerate((last, average)):
+            label = fonts["small"].render(line, True, TEXT_COLOR)
+            screen.blit(label, (x, 365 + 30 * i))
 
 
 def make_overlay():
@@ -179,69 +178,3 @@ def draw_popup(screen, fonts, overlay, result):
                                              POPUP_RECT.top + 60)))
     draw_button(screen, fonts, POPUP_UNDO, "Undo")
     draw_button(screen, fonts, POPUP_RESTART, "Restart")
-
-
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode(WINDOW_SIZE)
-    pygame.display.set_caption("Gomoku")
-    fonts = {
-        "big": pygame.font.Font(None, 64),
-        "normal": pygame.font.Font(None, 30),
-        "small": pygame.font.Font(None, 26),
-    }
-    ghosts = {BLACK: make_ghost(BLACK_STONE_COLOR),
-              WHITE: make_ghost(WHITE_STONE_COLOR)}
-    red_ghost = make_ghost(RED)
-    overlay = make_overlay()
-    clock = pygame.time.Clock()
-    board = Board()
-    result = None
-    forbidden = compute_forbidden(board)
-
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                changed = False
-                undo_clicked = (UNDO_BUTTON.collidepoint(event.pos)
-                                or (result is not None
-                                    and POPUP_UNDO.collidepoint(event.pos)))
-                if undo_clicked:
-                    if board.history:
-                        board.undo()
-                        changed = True
-                elif result is not None and POPUP_RESTART.collidepoint(
-                        event.pos):
-                    board = Board()
-                    changed = True
-                elif result is None:
-                    cell = pixel_to_intersection(*event.pos)
-                    # La GUI verifie la legalite avant d'appeler play.
-                    if cell is not None and board.is_legal(*cell):
-                        board.play(*cell)
-                        changed = True
-                if changed:
-                    result = compute_result(board)
-                    forbidden = [] if result else compute_forbidden(board)
-
-        draw_board(screen, board, forbidden)
-        if result is None:
-            hovered = pixel_to_intersection(*pygame.mouse.get_pos())
-            if hovered is not None and board.get(*hovered) == EMPTY:
-                if hovered in forbidden:
-                    draw_ghost(screen, red_ghost, *hovered)
-                else:
-                    draw_ghost(screen, ghosts[board.current_player], *hovered)
-        draw_panel(screen, fonts, board, result)
-        if result is not None:
-            draw_popup(screen, fonts, overlay, result)
-        pygame.display.flip()
-        clock.tick(FPS)
-    pygame.quit()
-
-
-if __name__ == "__main__":
-    main()
