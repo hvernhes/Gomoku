@@ -1,34 +1,50 @@
 """Minimax simple (sans elagage) : choisit le coup du joueur courant."""
-
 import random
 
-from Game.board import DRAW, opponent_of
+from src.ai.heuristic import evaluation
+from src.game.Board import Board
+from src.game.Cell import Cell
+from src.helpers.computation import compute_result
+from src.helpers.utils import opponent_of
 
 # Note d'une victoire : bien plus grande que toute note d'evaluation.
 WIN_SCORE = 1_000_000
+# L'heuristique peut renvoyer une valeur infinie (constantes en np.inf) ou
+# nan (inf - inf) : on borne sa note pour qu'une vraie victoire l'emporte
+# toujours et que min / max restent fiables.
+EVALUATION_LIMIT = WIN_SCORE // 2
 
 DEFAULT_DEPTH = 2
 
 
-def evaluate(board, ai_player):
+def evaluate(
+        board: Board,
+        ai_player: int
+) -> float:
     """Note d'une position non terminale, du point de vue de `ai_player`
-    (plus c'est grand, mieux c'est pour lui).
+    (plus c'est grand, mieux c'est pour lui). Adaptateur vers l'heuristique,
+    avec un tout petit hasard pour departager les coups a egalite."""
 
-    Version provisoire : difference de pierres capturees, plus un tout petit
-    hasard pour departager les coups a egalite. C'est le point d'accroche
-    de l'heuristique, a remplacer plus tard."""
-    opponent = opponent_of(ai_player)
-    difference = board.captures[ai_player] - board.captures[opponent]
-    return difference + random.random() * 0.01
+    score = evaluation(board.grid, board.captures, ai_player)
+    if score != score:
+        score = 0.0
+    score = max(-EVALUATION_LIMIT, min(EVALUATION_LIMIT, score))
+
+    return score + random.random() * 0.01
 
 
-def minimax(board, depth, ai_player):
+def minimax(
+        board: Board,
+        depth: int,
+        ai_player: int
+) -> float:
     """Note de la position courante pour `ai_player`, en explorant `depth`
     coups de plus. L'IA maximise, son adversaire minimise."""
+
     # Positions terminales : notes exactes. On ajoute la profondeur restante
     # pour preferer une victoire proche (et retarder une defaite).
-    result = board.result()
-    if result == DRAW:
+    result = compute_result(board)
+    if result == "draw":
         return 0
     if result is not None:
         if result == ai_player:
@@ -45,30 +61,37 @@ def minimax(board, depth, ai_player):
 
     maximizing = board.current_player == ai_player
     best = -float("inf") if maximizing else float("inf")
-    for row, col in moves:
-        board.play(row, col)
+    for cell in moves:
+        board.play(cell)
         score = minimax(board, depth - 1, ai_player)
         board.undo()
         if maximizing:
             best = max(best, score)
         else:
             best = min(best, score)
+
     return best
 
 
-def best_move(board, depth=DEFAULT_DEPTH):
-    """Meilleur coup (row, col) du joueur courant, ou None s'il n'a aucun
-    coup legal. Le plateau est laisse exactement comme il etait."""
+def best_move(
+        board: Board,
+        depth: int = DEFAULT_DEPTH
+) -> Cell | None:
+    """Meilleur coup du joueur courant, ou None s'il n'a aucun coup legal.
+    Le plateau est laisse exactement comme il etait."""
+
     if depth < 1:
         raise ValueError("depth must be at least 1")
+
     ai_player = board.current_player
     best_score = -float("inf")
     best = None
-    for row, col in board.legal_moves():
-        board.play(row, col)
+    for cell in board.legal_moves():
+        board.play(cell)
         score = minimax(board, depth - 1, ai_player)
         board.undo()
         if score > best_score:
             best_score = score
-            best = (row, col)
+            best = cell
+
     return best
