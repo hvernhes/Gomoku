@@ -1,17 +1,9 @@
-from heuristic import (
-    FIVE_OPEN_STONES,
-    FOUR_BLOCKED_STONES,
-    FOUR_HALF_BLOCKED_STONES,
-    FOUR_OPEN_STONES,
-    THREE_BLOCKED_STONES,
-    THREE_HALF_BLOCKED_STONES,
-    THREE_OPEN_STONES
-)
 from board import (
     AXES,
     NUMBER_OF_CELLS,
     EMPTY
 )
+from src.ai.weights import HeuristicWeights
 from src.game.Cell import Cell
 from src.helpers.utils import (
     get_cell_state,
@@ -259,37 +251,39 @@ def _get_alignment(
 
 
 def _compute_alignment_score(
-        aligned: dict[frozenset[tuple[int, int]], dict[str, bool | int]]
+        aligned: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
+        weights: HeuristicWeights
 ) -> int:
 
     score = 0
 
     for cells, properties in aligned.items():
         if len(cells) >= 5 and not properties["broken"]:
-            score += FIVE_OPEN_STONES
+            score += weights.five_open_stones
 
         elif len(cells) >= 4:
             if properties["free"] == 2 and not properties["broken"]:
-                score += FOUR_OPEN_STONES
+                score += weights.four_open_stones
             elif properties["free"] == 1 or properties["broken"] or len(cells) >= 5:          
-                score += FOUR_HALF_BLOCKED_STONES
+                score += weights.four_half_blocked_stones
             else:
-                score += FOUR_BLOCKED_STONES
+                score += weights.four_blocked_stones
 
         elif len(cells) == 3:
             if properties["free"] == 2:
-                score += THREE_OPEN_STONES
+                score += weights.three_open_stones
             elif properties["free"] == 1:          
-                score += THREE_HALF_BLOCKED_STONES
+                score += weights.three_half_blocked_stones
             else:
-                score += THREE_BLOCKED_STONES
+                score += weights.three_blocked_stones
 
     return score
 
 
 def evaluate_alignments(
         grid: list[list[int]],
-        player: int
+        player: int,
+        weights: HeuristicWeights
 ) -> int:
 
     aligned: dict[frozenset[tuple[int, int]], dict[str, bool | int]] = {}
@@ -310,6 +304,6 @@ def evaluate_alignments(
                 if cells not in aligned:
                     aligned[cells] = properties.copy()
 
-    score = _compute_alignment_score(aligned)
+    score = _compute_alignment_score(aligned, weights)
 
     return score

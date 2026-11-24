@@ -5,6 +5,7 @@ from board import (
 )
 from heuristic import STONE_CAPTURE
 from src.ai.captures_evaluation import evaluate_captures
+from src.ai.weights import generate_weights
 from tests.utils import (
     create_capture_configuration,
     create_empty_grid,
@@ -30,6 +31,7 @@ def test_one_possible_capture_in_each_direction(
 ) -> None:
 
     grid = create_empty_grid()
+    weights = generate_weights()
 
     create_capture_configuration(
         grid,
@@ -38,7 +40,7 @@ def test_one_possible_capture_in_each_direction(
         WHITE
     )
 
-    score = evaluate_captures(grid, 0, WHITE)
+    score = evaluate_captures(grid, 0, WHITE, weights)
 
     assert score == STONE_CAPTURE
 
@@ -47,6 +49,7 @@ def test_multiple_possible_captures_from_one_stone(
 ) -> None:
 
     grid = create_empty_grid()
+    weights = generate_weights()
 
     directions = [
         (0, -1),
@@ -62,7 +65,7 @@ def test_multiple_possible_captures_from_one_stone(
             WHITE
         )
 
-    score = evaluate_captures(grid, 0, WHITE)
+    score = evaluate_captures(grid, 0, WHITE, weights)
 
     assert score == 3 * STONE_CAPTURE
 
@@ -71,6 +74,7 @@ def test_possible_captures_from_different_player_stones(
 ) -> None:
 
     grid = create_empty_grid()
+    weights = generate_weights()
 
     create_capture_configuration(
         grid,
@@ -85,7 +89,7 @@ def test_possible_captures_from_different_player_stones(
         WHITE
     )
 
-    score = evaluate_captures(grid, 0, WHITE)
+    score = evaluate_captures(grid, 0, WHITE, weights)
 
     assert score == 2 * STONE_CAPTURE
 
@@ -112,12 +116,13 @@ def test_no_capture_with_invalid_pattern(
 ):
 
     grid = create_empty_grid()
+    weights = generate_weights()
 
     place_stones(grid, [(9, 9)], WHITE)
     place_stones(grid, opponent_cells, BLACK)
     place_stones(grid, extra_cells, WHITE)
 
-    score = evaluate_captures(grid, 0, WHITE)
+    score = evaluate_captures(grid, 0, WHITE, weights)
 
     assert score == 0
 
@@ -126,11 +131,12 @@ def test_no_capture_out_of_bounds(
 ) -> None:
 
     grid = create_empty_grid()
+    weights = generate_weights()
 
     place_stones(grid, [(0, 0)], WHITE)
     place_stones(grid, [(0, 1), (0, 2)], BLACK)
 
-    score = evaluate_captures(grid, 0, WHITE)
+    score = evaluate_captures(grid, 0, WHITE, weights)
 
     assert score == STONE_CAPTURE
 
@@ -139,6 +145,7 @@ def test_no_capture_when_pattern_goes_out_of_bounds(
 ) -> None:
 
     grid = create_empty_grid()
+    weights = generate_weights()
 
     create_capture_configuration(
         grid,
@@ -147,6 +154,6 @@ def test_no_capture_when_pattern_goes_out_of_bounds(
         WHITE
     )
 
-    score = evaluate_captures(grid, 0, WHITE)
+    score = evaluate_captures(grid, 0, WHITE, weights)
 
     assert score == 0

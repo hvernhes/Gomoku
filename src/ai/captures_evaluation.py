@@ -11,6 +11,7 @@ from heuristic import (
     CAPTURE_FIVE,
     STONE_CAPTURE
 )
+from src.ai.weights import HeuristicWeights
 from src.game.Cell import Cell
 from src.helpers.utils import (
     get_cell_state,
@@ -20,16 +21,17 @@ from src.helpers.utils import (
 
 
 def _evaluate_capture_count(
-        captures: int
+        captures: int,
+        weights: HeuristicWeights
 ) -> int:
 
     scores = {
         0: 0,
-        1: CAPTURE_ONE,
-        2: CAPTURE_TWO,
-        3: CAPTURE_THREE,
-        4: CAPTURE_FOUR,
-        5: CAPTURE_FIVE
+        1: weights.capture_one,
+        2: weights.capture_two,
+        3: weights.capture_three,
+        4: weights.capture_four,
+        5: weights.capture_five
     }
 
     return scores[captures]
@@ -76,7 +78,8 @@ def _get_capture_possibilities(
 
 def _evaluate_capture_opportunities(
         grid: list[list[int]],
-        player: int
+        player: int,
+        weights: HeuristicWeights
 ) -> int:
 
     possible_captures = 0
@@ -92,18 +95,19 @@ def _evaluate_capture_opportunities(
                 player
             )
 
-    return possible_captures * STONE_CAPTURE
+    return possible_captures * weights.stone_capture
 
 
 def evaluate_captures(
         grid: list[list[int]],
         captures: int,
-        player: int
+        player: int,
+        weights: HeuristicWeights
 ) -> int:
 
     score = 0
 
-    score += _evaluate_capture_count(captures)
-    score += _evaluate_capture_opportunities(grid, player)
+    score += _evaluate_capture_count(captures, weights)
+    score += _evaluate_capture_opportunities(grid, player, weights)
 
     return score

@@ -4,6 +4,7 @@ from heuristic import (
     CENTRAL_FAR
 )
 from board import NUMBER_OF_CELLS
+from src.ai.weights import HeuristicWeights
 from src.game.Cell import Cell
 from src.helpers.utils import (
     get_cell_state
@@ -12,7 +13,8 @@ from src.helpers.utils import (
 
 def evaluate_center(
         grid: list[list[int]],
-        player: int
+        player: int,
+        weights: HeuristicWeights
 ) -> int:
 
     value = 0
@@ -26,16 +28,16 @@ def evaluate_center(
                 CENTRAL_FAR <= row <= NUMBER_OF_CELLS - 1 - CENTRAL_FAR
                 and CENTRAL_FAR <= column <= NUMBER_OF_CELLS - 1 - CENTRAL_FAR
             ):
-                value += 1
+                value += weights.central_position
             if (
                 CENTRAL_MEDIUM <= row <= NUMBER_OF_CELLS - 1 - CENTRAL_MEDIUM
                 and CENTRAL_MEDIUM <= column <= NUMBER_OF_CELLS - 1 - CENTRAL_MEDIUM
             ):
-                value += 1
+                value += weights.central_position
             if (
                 CENTRAL <= row <= NUMBER_OF_CELLS - 1 - CENTRAL
                 and CENTRAL <= column <= NUMBER_OF_CELLS - 1 - CENTRAL
             ):
-                value += 1
+                value += weights.central_position
 
     return value
