@@ -118,7 +118,8 @@ def _format_game(
         lines.append(
             "AI times (s): "
             + ", ".join(f"{t:.2f}" for t in ai_times)
-            + f"  (average {sum(ai_times) / len(ai_times):.2f},"
+            + f"  ({len(ai_times)} moves,"
+            f" average {sum(ai_times) / len(ai_times):.2f},"
             f" max {max(ai_times):.2f})"
         )
     lines.append("")

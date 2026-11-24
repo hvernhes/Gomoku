@@ -1,4 +1,4 @@
-"""Minimax simple (sans elagage) : choisit le coup du joueur courant."""
+"""Minimax avec elagage alpha-beta : choisit le coup du joueur courant."""
 import random
 
 from src.ai.heuristic import evaluation
@@ -33,13 +33,29 @@ def evaluate(
     return score + random.random() * 0.01
 
 
+def order_moves(
+        board: Board,
+        moves: list[Cell]
+) -> list[Cell]:
+    """Point d'accroche : ordre dans lequel essayer les coups. Pour
+    l'instant, l'ordre de legal_moves (aucun tri) ; a remplacer par le tri
+    de ma binome (les coups prometteurs d'abord)."""
+
+    return moves
+
+
 def minimax(
         board: Board,
         depth: int,
-        ai_player: int
+        ai_player: int,
+        alpha: float = -float("inf"),
+        beta: float = float("inf")
 ) -> float:
     """Note de la position courante pour `ai_player`, en explorant `depth`
-    coups de plus. L'IA maximise, son adversaire minimise."""
+    coups de plus. L'IA maximise, son adversaire minimise.
+    alpha : note que l'IA est deja sure d'obtenir ; beta : note que
+    l'adversaire laissera au plus. Des que beta <= alpha, le reste du noeud
+    ne peut plus changer la decision : on coupe."""
 
     # Positions terminales : notes exactes. On ajoute la profondeur restante
     # pour preferer une victoire proche (et retarder une defaite).
@@ -61,14 +77,21 @@ def minimax(
 
     maximizing = board.current_player == ai_player
     best = -float("inf") if maximizing else float("inf")
-    for cell in moves:
+    for cell in order_moves(board, moves):
         board.play(cell)
-        score = minimax(board, depth - 1, ai_player)
-        board.undo()
+        try:
+            score = minimax(board, depth - 1, ai_player, alpha, beta)
+        finally:
+            # Meme si la recherche plante, le coup simule est annule.
+            board.undo()
         if maximizing:
             best = max(best, score)
+            alpha = max(alpha, best)
         else:
             best = min(best, score)
+            beta = min(beta, best)
+        if beta <= alpha:
+            break
 
     return best
 
@@ -84,14 +107,18 @@ def best_move(
         raise ValueError("depth must be at least 1")
 
     ai_player = board.current_player
+    alpha = -float("inf")
     best_score = -float("inf")
     best = None
-    for cell in board.legal_moves():
+    for cell in order_moves(board, board.legal_moves()):
         board.play(cell)
-        score = minimax(board, depth - 1, ai_player)
-        board.undo()
+        try:
+            score = minimax(board, depth - 1, ai_player, alpha, float("inf"))
+        finally:
+            board.undo()
         if score > best_score:
             best_score = score
             best = cell
+            alpha = best_score
 
     return best

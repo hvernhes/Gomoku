@@ -99,8 +99,9 @@ def _draw_ai_time(
     else:
         last = "Last: -"
         average = "Average: -"
+    moves = f"Moves: {len(ai_times)}"
 
-    for i, line in enumerate((last, average)):
+    for i, line in enumerate((last, average, moves)):
         label = fonts["small"].render(line, True, TEXT_COLOR)
         screen.blit(label, (x, 365 + 30 * i))
 

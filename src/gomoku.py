@@ -17,6 +17,7 @@ def main(
     hotseat (deux humains)."""
 
     pygame.init()
+    state = None
 
     try:
         screen, fonts, ghosts, overlay, clock, layout = initialize_display()
@@ -54,9 +55,10 @@ def main(
 
             clock.tick(FPS)
 
-        state.save_log()
-
     finally:
+        # Le journal est sauvegarde aussi si le programme plante.
+        if state is not None:
+            state.save_log()
         pygame.quit()
 
 
