@@ -5,10 +5,13 @@ from board import (
 )
 from heuristic import STONE_CAPTURE
 from src.ai.captures_evaluation import evaluate_captures
+from src.ai.heuristic import compute_captures
 from src.ai.weights import generate_weights
+from src.helpers.utils import opponent_of
 from tests.utils import (
     create_capture_configuration,
     create_empty_grid,
+    get_player_situation,
     place_stones
 )
 
@@ -32,15 +35,17 @@ def test_one_possible_capture_in_each_direction(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = WHITE
 
     create_capture_configuration(
         grid,
         (9, 9),
         direction,
-        WHITE
+        player
     )
 
-    score = evaluate_captures(grid, 0, WHITE, weights)
+    player_situation = get_player_situation(grid, player)
+    score = compute_captures(player_situation.captures["possible_captures"], weights)
 
     assert score == STONE_CAPTURE
 
@@ -50,6 +55,7 @@ def test_multiple_possible_captures_from_one_stone(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = WHITE
 
     directions = [
         (0, -1),
@@ -62,10 +68,11 @@ def test_multiple_possible_captures_from_one_stone(
             grid,
             (9, 9),
             direction,
-            WHITE
+            player
         )
 
-    score = evaluate_captures(grid, 0, WHITE, weights)
+    player_situation = get_player_situation(grid, player)
+    score = compute_captures(player_situation.captures["possible_captures"], weights)
 
     assert score == 3 * STONE_CAPTURE
 
@@ -75,21 +82,23 @@ def test_possible_captures_from_different_player_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = WHITE
 
     create_capture_configuration(
         grid,
         (5, 5),
         (0, 1),
-        WHITE
+        player
     )
     create_capture_configuration(
         grid,
         (12, 12),
         (-1, 1),
-        WHITE
+        player
     )
 
-    score = evaluate_captures(grid, 0, WHITE, weights)
+    player_situation = get_player_situation(grid, player)
+    score = compute_captures(player_situation.captures["possible_captures"], weights)
 
     assert score == 2 * STONE_CAPTURE
 
@@ -117,12 +126,14 @@ def test_no_capture_with_invalid_pattern(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = WHITE
 
-    place_stones(grid, [(9, 9)], WHITE)
-    place_stones(grid, opponent_cells, BLACK)
-    place_stones(grid, extra_cells, WHITE)
+    place_stones(grid, [(9, 9)], player)
+    place_stones(grid, opponent_cells, opponent_of(player))
+    place_stones(grid, extra_cells, player)
 
-    score = evaluate_captures(grid, 0, WHITE, weights)
+    player_situation = get_player_situation(grid, player)
+    score = compute_captures(player_situation.captures["possible_captures"], weights)
 
     assert score == 0
 
@@ -132,11 +143,13 @@ def test_no_capture_out_of_bounds(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = WHITE
 
-    place_stones(grid, [(0, 0)], WHITE)
-    place_stones(grid, [(0, 1), (0, 2)], BLACK)
+    place_stones(grid, [(0, 0)], player)
+    place_stones(grid, [(0, 1), (0, 2)], opponent_of(player))
 
-    score = evaluate_captures(grid, 0, WHITE, weights)
+    player_situation = get_player_situation(grid, player)
+    score = compute_captures(player_situation.captures["possible_captures"], weights)
 
     assert score == STONE_CAPTURE
 
@@ -146,14 +159,16 @@ def test_no_capture_when_pattern_goes_out_of_bounds(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = WHITE
 
     create_capture_configuration(
         grid,
         (9, 2),
         (0, -1),
-        WHITE
+        player
     )
 
-    score = evaluate_captures(grid, 0, WHITE, weights)
+    player_situation = get_player_situation(grid, player)
+    score = compute_captures(player_situation.captures["possible_captures"], weights)
 
     assert score == 0

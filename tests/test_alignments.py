@@ -1,8 +1,5 @@
 import pytest
-from board import (
-    BLACK,
-    WHITE
-)
+from board import BLACK
 from heuristic import (
     FIVE_OPEN_STONES,
     FOUR_BLOCKED_STONES,
@@ -14,9 +11,11 @@ from heuristic import (
 )
 from src.ai.heuristic import evaluate_alignments
 from src.ai.weights import generate_weights
+from src.helpers.utils import opponent_of
 from tests.utils import (
     create_empty_grid,
     create_line,
+    get_player_situation,
     place_stones
 )
 
@@ -26,8 +25,10 @@ def test_empty_grid(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == 0
 
@@ -37,10 +38,12 @@ def test_two_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, [(9, 9), (9, 10)], BLACK)
+    place_stones(grid, [(9, 9), (9, 10)], player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == 0
 
@@ -50,11 +53,13 @@ def test_two_stones_separated_by_opponent(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, [(9, 8), (9, 10)], BLACK)
-    place_stones(grid, [(9, 9)], WHITE)
+    place_stones(grid, [(9, 8), (9, 10)], player)
+    place_stones(grid, [(9, 9)], opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == 0
 
@@ -64,10 +69,12 @@ def test_three_stones_with_two_holes(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, [(9, 8), (9, 10), (9, 12)], BLACK)
+    place_stones(grid, [(9, 8), (9, 10), (9, 12)], player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == 0
 
@@ -77,10 +84,12 @@ def test_four_stones_with_two_holes(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, [(9, 8), (9, 10), (9, 11), (9, 13)], BLACK)
+    place_stones(grid, [(9, 8), (9, 10), (9, 11), (9, 13)], player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == 2 * THREE_OPEN_STONES
 
@@ -101,11 +110,13 @@ def test_three_open_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line(start, direction, 3)
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == THREE_OPEN_STONES
 
@@ -128,11 +139,13 @@ def test_three_stones_on_board_edge(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line(start, direction, 3)
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == THREE_HALF_BLOCKED_STONES
 
@@ -150,12 +163,14 @@ def test_three_half_blocked_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line((9, 8), (0, 1), 3)
-    place_stones(grid, cells, BLACK)
-    place_stones(grid, opponent, WHITE)
+    place_stones(grid, cells, player)
+    place_stones(grid, opponent, opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == THREE_HALF_BLOCKED_STONES
 
@@ -165,12 +180,14 @@ def test_three_blocked_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line((9, 8), (0, 1), 3)
-    place_stones(grid, cells, BLACK)
-    place_stones(grid, [(9, 7), (9, 11)], WHITE)
+    place_stones(grid, cells, player)
+    place_stones(grid, [(9, 7), (9, 11)], opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == THREE_BLOCKED_STONES
 
@@ -188,10 +205,12 @@ def test_three_stones_with_hole(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == THREE_OPEN_STONES
 
@@ -217,11 +236,13 @@ def test_three_half_blocked_stones_with_hole(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, cells, BLACK)
-    place_stones(grid, opponent, WHITE)
+    place_stones(grid, cells, player)
+    place_stones(grid, opponent, opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == THREE_HALF_BLOCKED_STONES
 
@@ -239,11 +260,13 @@ def test_three_blocked_stones_with_hole(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, cells, BLACK)
-    place_stones(grid, [(9, 7), (9, 12)], WHITE)
+    place_stones(grid, cells, player)
+    place_stones(grid, [(9, 7), (9, 12)], opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == THREE_BLOCKED_STONES
 
@@ -271,10 +294,12 @@ def test_three_stones_with_hole_on_board_edge(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == THREE_HALF_BLOCKED_STONES
 
@@ -295,11 +320,13 @@ def test_four_open_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line(start, direction, 4)
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FOUR_OPEN_STONES
 
@@ -322,10 +349,13 @@ def test_four_stones_on_board_edge(
 
     grid = create_empty_grid()
     weights = generate_weights()
-    cells = create_line(start, direction, 4)
-    place_stones(grid, cells, BLACK)
+    player = BLACK
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    cells = create_line(start, direction, 4)
+    place_stones(grid, cells, player)
+
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FOUR_HALF_BLOCKED_STONES
 
@@ -343,12 +373,14 @@ def test_four_half_blocked_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line((8, 9), (1, 0), 4)
-    place_stones(grid, cells, BLACK)
-    place_stones(grid, opponent, WHITE)
+    place_stones(grid, cells, player)
+    place_stones(grid, opponent, opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FOUR_HALF_BLOCKED_STONES
 
@@ -358,12 +390,14 @@ def test_four_blocked_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line((8, 9), (1, 0), 4)
-    place_stones(grid, cells, BLACK)
-    place_stones(grid, [(7, 9), (12, 9)], WHITE)
+    place_stones(grid, cells, player)
+    place_stones(grid, [(7, 9), (12, 9)], opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FOUR_BLOCKED_STONES
 
@@ -382,10 +416,12 @@ def test_four_stones_with_hole(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FOUR_HALF_BLOCKED_STONES
 
@@ -413,11 +449,13 @@ def test_four_blocked_stones_with_hole(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, cells, BLACK)
-    place_stones(grid, opponent, WHITE)
+    place_stones(grid, cells, player)
+    place_stones(grid, opponent, opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FOUR_HALF_BLOCKED_STONES
 
@@ -451,10 +489,12 @@ def test_four_stones_with_hole_on_board_edge(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FOUR_HALF_BLOCKED_STONES
 
@@ -475,11 +515,13 @@ def test_five_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line(start, direction, 5)
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FIVE_OPEN_STONES
 
@@ -498,12 +540,14 @@ def test_five_stones_with_blocked_end(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line((5, 5), (1, 1), 5)
-    place_stones(grid, cells, BLACK)
-    place_stones(grid, opponent_cell, WHITE)
+    place_stones(grid, cells, player)
+    place_stones(grid, opponent_cell, opponent_of(player))
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FIVE_OPEN_STONES
 
@@ -513,14 +557,16 @@ def test_five_stones_with_hole(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     place_stones(
         grid,
         [(9, 8), (9, 9), (9, 11), (9, 12), (9, 13)],
-        BLACK
+        player
     )
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FOUR_HALF_BLOCKED_STONES
 
@@ -530,11 +576,13 @@ def test_six_stones(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     cells = create_line((9, 7), (0, 1), 6)
-    place_stones(grid, cells, BLACK)
+    place_stones(grid, cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == FIVE_OPEN_STONES
 
@@ -544,14 +592,16 @@ def test_two_crossing_alignments(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     horizontal_cells = create_line((9, 7), (0, 1), 4)
     vertical_cells = create_line((7, 9), (1, 0), 4)
 
-    place_stones(grid, horizontal_cells, BLACK)
-    place_stones(grid, vertical_cells, BLACK)
+    place_stones(grid, horizontal_cells, player)
+    place_stones(grid, vertical_cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == 2 * FOUR_OPEN_STONES
 
@@ -561,14 +611,16 @@ def test_two_alignments_starting_with_the_same_stone(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     horizontal_cells = create_line((9, 9), (0, 1), 4)
     vertical_cells = create_line((9, 9), (1, -1), 4)
 
-    place_stones(grid, horizontal_cells, BLACK)
-    place_stones(grid, vertical_cells, BLACK)
+    place_stones(grid, horizontal_cells, player)
+    place_stones(grid, vertical_cells, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == 2 * FOUR_OPEN_STONES
 
@@ -578,13 +630,15 @@ def test_two_parallel_alignments(
 
     grid = create_empty_grid()
     weights = generate_weights()
+    player = BLACK
 
     first = create_line((8, 7), (0, 1), 4)
     second = create_line((10, 7), (0, 1), 4)
 
-    place_stones(grid, first, BLACK)
-    place_stones(grid, second, BLACK)
+    place_stones(grid, first, player)
+    place_stones(grid, second, player)
 
-    score = evaluate_alignments(grid, BLACK, weights)
+    player_situation = get_player_situation(grid, player)
+    score = evaluate_alignments(player_situation.aligned, weights)
 
     assert score == 2 * FOUR_OPEN_STONES

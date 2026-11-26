@@ -3,6 +3,7 @@ from board import (
     NUMBER_OF_CELLS,
     EMPTY
 )
+from src.ai.player_situation import PlayerSituation
 from src.ai.weights import HeuristicWeights
 from src.game.Cell import Cell
 from src.helpers.utils import (
@@ -103,3 +104,17 @@ def evaluate_captures(
     score += _evaluate_capture_opportunities(grid, player, weights)
 
     return score
+
+
+def check_captures(
+        grid: list[list[int]],
+        cell: Cell,
+        player: int,
+        player_situation: PlayerSituation
+) -> None:
+
+    player_situation.captures["possible_captures"] += _get_capture_possibilities(
+        grid,
+        cell,
+        player
+    )
