@@ -268,22 +268,35 @@ class Board:
 
     def _can_stop_five(self, five_row, five_col, five_player):
         """L'adversaire peut-il, en un coup, casser le 5 par une capture ou
-        atteindre 10 pierres capturees ? Simulation brute : on essaie chaque
-        case libre (play puis undo). Appele seulement quand un 5 vient
-        d'etre forme, donc rarement. Suppose que c'est a l'adversaire de jouer."""
+        atteindre 10 pierres capturees ? Suppose que c'est a l'adversaire de
+        jouer.
+        Seule une capture peut arreter le 5, et un coup qui capture est
+        toujours legal (voir is_legal). Une capture exige une pierre de
+        `five_player` collee a la case jouee : on ne regarde que les cases
+        libres voisines de ses pierres, sans appeler is_legal (le test du
+        double-three coute cher et ce coup est appele souvent pendant la
+        recherche)."""
         stopper = opponent_of(five_player)
+        checked = set()
         for row in range(NUMBER_OF_CELLS):
             for col in range(NUMBER_OF_CELLS):
-                if not self.is_legal(Cell(row, col)):
+                if self.grid[row][col] != five_player:
                     continue
-                self.play(Cell(row, col))
-                captured = self.history[-1][2]
-                stops = bool(captured) and (
-                    self.captures[stopper] >= CAPTURES_TO_WIN
-                    or not self.has_five_through(five_row, five_col))
-                self.undo()
-                if stops:
-                    return True
+                for d_row, d_col in DIRECTIONS:
+                    cell = Cell(row + d_row, col + d_col)
+                    if (cell.row, cell.column) in checked:
+                        continue
+                    checked.add((cell.row, cell.column))
+                    if not self._is_free(cell):
+                        continue
+                    if not self._find_captured(cell, stopper):
+                        continue
+                    self.play(cell)
+                    stops = (self.captures[stopper] >= CAPTURES_TO_WIN
+                             or not self.has_five_through(five_row, five_col))
+                    self.undo()
+                    if stops:
+                        return True
         return False
 
     def __str__(

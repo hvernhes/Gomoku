@@ -39,7 +39,8 @@ def save_game_log(
         path: str,
         board: Board,
         ai_player: int | None,
-        ai_times: list[float]
+        ai_times: list[float],
+        depth: int | None = None
 ) -> None:
     """Ecrit la partie telle qu'elle est (le fichier est ecrase) : coups,
     captures, resultat s'il y en a un, plateau final, temps de l'IA.
@@ -51,7 +52,7 @@ def save_game_log(
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as log_file:
-            log_file.write(_format_game(board, ai_player, ai_times))
+            log_file.write(_format_game(board, ai_player, ai_times, depth))
     except OSError:
         pass
 
@@ -59,13 +60,16 @@ def save_game_log(
 def _format_game(
         board: Board,
         ai_player: int | None,
-        ai_times: list[float]
+        ai_times: list[float],
+        depth: int | None
 ) -> str:
 
     if ai_player is None:
         mode = "hotseat"
     else:
         mode = f"human vs AI, AI plays {PLAYER_NAMES[ai_player]}"
+        if depth is not None:
+            mode += f", depth {depth}"
 
     lines = [
         f"Game log - saved {datetime.now():%Y-%m-%d %H:%M:%S}"

@@ -9,8 +9,9 @@ from src.game.Board import Board
 from src.game.Cell import Cell
 
 # Distance maximale (en carre) entre une case candidate et une pierre.
-# 2 voit les coups "avec un trou" (X X . X), 1 non.
-CANDIDATE_RADIUS = 2
+# 1 : environ 4 fois moins de positions que 2, et le meme coup sur les
+# positions mesurees ; 2 voit en plus les coups "avec un trou" (X X . X).
+CANDIDATE_RADIUS = 1
 
 CENTER = NUMBER_OF_CELLS // 2
 
