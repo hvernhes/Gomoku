@@ -1,10 +1,6 @@
 import pytest
-from board import (
-    BLACK,
-    WHITE
-)
+from board import WHITE
 from heuristic import STONE_CAPTURE
-from src.ai.captures_evaluation import evaluate_captures
 from src.ai.heuristic import compute_captures
 from src.ai.weights import generate_weights
 from src.helpers.utils import opponent_of
