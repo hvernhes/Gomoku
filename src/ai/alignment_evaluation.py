@@ -16,7 +16,7 @@ def _get_alignment_properties(
         direction: tuple[int, int],
         player: int,
         opponent: int
-) -> tuple[set[tuple[int, int]], bool, bool, bool]:
+) -> tuple[set[tuple[int, int]], bool, bool]:
 
     cells = set({(starting_cell.row, starting_cell.column)})
     empty = False

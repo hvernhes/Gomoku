@@ -67,10 +67,9 @@ def _evaluate_capture_count(
         4: weights.capture_two,
         6: weights.capture_three,
         8: weights.capture_four,
-        10: weights.capture_five
     }
 
-    return scores[captures]
+    return scores.get(captures)
 
 
 def compute_captures(
@@ -112,13 +111,11 @@ def evaluation(
 
     for row in range(NUMBER_OF_CELLS):
         for column in range(NUMBER_OF_CELLS):
-            cell = Cell(row, column)
-            cell_state = get_cell_state(grid, cell)
 
-            if cell_state == player:
-                player_evaluation(player, grid, cell, current_player_situation)
-            elif cell_state == opponent:
-                player_evaluation(opponent, grid, cell, opponent_situation)
+            if grid[row][column] == player:
+                player_evaluation(player, grid, Cell(row, column), current_player_situation)
+            elif grid[row][column] == opponent:
+                player_evaluation(opponent, grid, Cell(row, column), opponent_situation)
 
     player_score = compute_player_score(current_player_situation, weights)
     opponent_score = compute_player_score(opponent_situation, weights)
