@@ -1,6 +1,7 @@
 import time
 from dataclasses import dataclass
 from src.ai.minimax import best_move
+from src.ai.weights import HeuristicWeights
 from src.game.Board import Board
 from src.helpers.computation import (
     compute_forbidden,
@@ -21,16 +22,24 @@ class GameState:
     ai_times: list[float]   # duree de reflexion de l'IA a chaque coup (s)
     log_path: str
     ai_player: int | None   # couleur de l'IA, None en hotseat
+    weights: HeuristicWeights | None
 
     @classmethod
     def new(
             cls,
-            ai_player: int | None
+            ai_player: int | None,
+            weights: HeuristicWeights | None
     ) -> "GameState":
+
+        if ai_player is None and weights is not None:
+            raise ValueError("No weights needed in hotseat mode")
+
+        if ai_player is not None and weights is None:
+            raise ValueError("AI weights are required")
 
         board, result, forbidden = iniatilze_game()
 
-        return cls(board, result, forbidden, [], new_log_path(), ai_player)
+        return cls(board, result, forbidden, [], new_log_path(), ai_player, weights)
 
     def is_ai_turn(
             self
@@ -97,8 +106,11 @@ class GameState:
             self
     ) -> None:
 
+        if self.weights is None:
+            raise RuntimeError("AI weights are not configured")
+
         start = time.perf_counter()
-        cell = best_move(self.board)
+        cell = best_move(self.board, self.weights)
         self.ai_times.append(time.perf_counter() - start)
         if cell is None:
             # Aucun coup legal alors que la partie n'est pas finie :

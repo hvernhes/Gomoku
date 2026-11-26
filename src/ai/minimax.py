@@ -7,6 +7,7 @@ from board import (
 )
 from src.ai.heuristic import evaluation
 from src.ai.move_ordering import order_moves
+from src.ai.weights import HeuristicWeights
 from src.game.Board import Board
 from src.game.Cell import Cell
 from src.helpers.computation import compute_result
@@ -24,13 +25,14 @@ DEFAULT_DEPTH = 2
 
 def evaluate(
         board: Board,
+        weights: HeuristicWeights,
         ai_player: int
 ) -> float:
     """Note d'une position non terminale, du point de vue de `ai_player`
     (plus c'est grand, mieux c'est pour lui). Adaptateur vers l'heuristique,
     avec un tout petit hasard pour departager les coups a egalite."""
 
-    score = evaluation(board.grid, board.captures, ai_player)
+    score = evaluation(board.grid, weights, board.captures, ai_player)
     if score != score:
         score = 0.0
     score = max(-EVALUATION_LIMIT, min(EVALUATION_LIMIT, score))
@@ -54,6 +56,7 @@ def _empty_cells(
 
 def minimax(
         board: Board,
+        weights: HeuristicWeights,
         depth: int,
         ai_player: int,
         alpha: float = -float("inf"),
@@ -77,7 +80,7 @@ def minimax(
 
     # Limite de profondeur : on estime au lieu de continuer.
     if depth == 0:
-        return evaluate(board, ai_player)
+        return evaluate(board, weights, ai_player)
 
     maximizing = board.current_player == ai_player
     best = -float("inf") if maximizing else float("inf")
@@ -88,7 +91,7 @@ def minimax(
         tried = True
         board.play(cell)
         try:
-            score = minimax(board, depth - 1, ai_player, alpha, beta)
+            score = minimax(board, weights, depth - 1, ai_player, alpha, beta)
         finally:
             # Meme si la recherche plante, le coup simule est annule.
             board.undo()
@@ -104,13 +107,14 @@ def minimax(
     # Aucun coup legal alors que la partie n'est pas finie (cas quasi
     # impossible) : on estime la position au lieu de renvoyer l'infini.
     if not tried:
-        return evaluate(board, ai_player)
+        return evaluate(board, weights, ai_player)
 
     return best
 
 
 def best_move(
         board: Board,
+        weights: HeuristicWeights,
         depth: int = DEFAULT_DEPTH
 ) -> Cell | None:
     """Meilleur coup du joueur courant, ou None s'il n'a aucun coup legal.
@@ -128,7 +132,7 @@ def best_move(
             continue
         board.play(cell)
         try:
-            score = minimax(board, depth - 1, ai_player, alpha, float("inf"))
+            score = minimax(board, weights, depth - 1, ai_player, alpha, float("inf"))
         finally:
             board.undo()
         if score > best_score:

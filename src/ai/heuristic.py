@@ -26,12 +26,12 @@ def evaluate_player(
 
 def evaluation(
         grid: list[list[int]],
+        weights: HeuristicWeights,
         captures: dict[int, int],
         player: int
 ) -> float:
 
     opponent = opponent_of(player)
-    weights = generate_weights()
     # if has_won(board, player):
     #     return WIN_SCORE
 
