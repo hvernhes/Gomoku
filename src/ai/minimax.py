@@ -1,7 +1,12 @@
 """Minimax avec elagage alpha-beta : choisit le coup du joueur courant."""
 import random
 
+from board import (
+    EMPTY,
+    NUMBER_OF_CELLS
+)
 from src.ai.heuristic import evaluation
+from src.ai.move_ordering import order_moves
 from src.game.Board import Board
 from src.game.Cell import Cell
 from src.helpers.computation import compute_result
@@ -33,15 +38,18 @@ def evaluate(
     return score + random.random() * 0.01
 
 
-def order_moves(
-        board: Board,
-        moves: list[Cell]
+def _empty_cells(
+        board: Board
 ) -> list[Cell]:
-    """Point d'accroche : ordre dans lequel essayer les coups. Pour
-    l'instant, l'ordre de legal_moves (aucun tri) ; a remplacer par le tri
-    de ma binome (les coups prometteurs d'abord)."""
+    """Toutes les cases vides, sans tester la legalite : le double-three
+    (couteux) n'est verifie qu'au moment d'essayer un coup."""
 
-    return moves
+    return [
+        Cell(row, col)
+        for row in range(NUMBER_OF_CELLS)
+        for col in range(NUMBER_OF_CELLS)
+        if board.grid[row][col] == EMPTY
+    ]
 
 
 def minimax(
@@ -71,13 +79,13 @@ def minimax(
     if depth == 0:
         return evaluate(board, ai_player)
 
-    moves = board.legal_moves()
-    if not moves:
-        return evaluate(board, ai_player)
-
     maximizing = board.current_player == ai_player
     best = -float("inf") if maximizing else float("inf")
-    for cell in order_moves(board, moves):
+    tried = False
+    for cell in order_moves(board, _empty_cells(board)):
+        if not board.is_legal(cell):
+            continue
+        tried = True
         board.play(cell)
         try:
             score = minimax(board, depth - 1, ai_player, alpha, beta)
@@ -92,6 +100,11 @@ def minimax(
             beta = min(beta, best)
         if beta <= alpha:
             break
+
+    # Aucun coup legal alors que la partie n'est pas finie (cas quasi
+    # impossible) : on estime la position au lieu de renvoyer l'infini.
+    if not tried:
+        return evaluate(board, ai_player)
 
     return best
 
@@ -110,7 +123,9 @@ def best_move(
     alpha = -float("inf")
     best_score = -float("inf")
     best = None
-    for cell in order_moves(board, board.legal_moves()):
+    for cell in order_moves(board, _empty_cells(board)):
+        if not board.is_legal(cell):
+            continue
         board.play(cell)
         try:
             score = minimax(board, depth - 1, ai_player, alpha, float("inf"))
