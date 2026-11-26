@@ -5,6 +5,7 @@ from board import (
     EMPTY,
     NUMBER_OF_CELLS
 )
+from src.ai.candidates import candidate_cells
 from src.ai.heuristic import evaluation
 from src.ai.move_ordering import order_moves
 from src.ai.weights import HeuristicWeights
@@ -44,7 +45,8 @@ def _empty_cells(
         board: Board
 ) -> list[Cell]:
     """Toutes les cases vides, sans tester la legalite : le double-three
-    (couteux) n'est verifie qu'au moment d'essayer un coup."""
+    (couteux) n'est verifie qu'au moment d'essayer un coup. Sert de repli
+    quand aucun candidat n'est jouable (voir _moves_to_try)."""
 
     return [
         Cell(row, col)
@@ -52,6 +54,27 @@ def _empty_cells(
         for col in range(NUMBER_OF_CELLS)
         if board.grid[row][col] == EMPTY
     ]
+
+
+def _moves_to_try(
+        board: Board
+):
+    """Coups legaux a essayer, un par un et dans l'ordre : d'abord les
+    candidats ; si aucun n'est legal, toutes les cases vides (repli : sinon
+    une liste de candidats entierement interdite serait prise pour 'aucun
+    coup'). La legalite est testee seulement quand la boucle demande le coup
+    suivant (le plateau est restaure entre deux coups)."""
+
+    found = False
+    for cell in order_moves(board, candidate_cells(board)):
+        if board.is_legal(cell):
+            found = True
+            yield cell
+    if found:
+        return
+    for cell in order_moves(board, _empty_cells(board)):
+        if board.is_legal(cell):
+            yield cell
 
 
 def minimax(
@@ -85,9 +108,7 @@ def minimax(
     maximizing = board.current_player == ai_player
     best = -float("inf") if maximizing else float("inf")
     tried = False
-    for cell in order_moves(board, _empty_cells(board)):
-        if not board.is_legal(cell):
-            continue
+    for cell in _moves_to_try(board):
         tried = True
         board.play(cell)
         try:
@@ -127,9 +148,7 @@ def best_move(
     alpha = -float("inf")
     best_score = -float("inf")
     best = None
-    for cell in order_moves(board, _empty_cells(board)):
-        if not board.is_legal(cell):
-            continue
+    for cell in _moves_to_try(board):
         board.play(cell)
         try:
             score = minimax(board, weights, depth - 1, ai_player, alpha, float("inf"))
