@@ -5,5 +5,8 @@
 __pycache__/
 *.pyc
 
+# Journaux de parties (generes a l'execution)
+logs/
+
 # Fichiers systeme macOS
 .DS_Store

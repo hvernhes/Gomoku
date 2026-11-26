@@ -322,7 +322,6 @@ def test_four_stones_on_board_edge(
 
     grid = create_empty_grid()
     weights = generate_weights()
-
     cells = create_line(start, direction, 4)
     place_stones(grid, cells, BLACK)
 

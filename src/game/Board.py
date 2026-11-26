@@ -35,7 +35,7 @@ class Board:
             cell: Cell
         ) -> None:
         if not self.is_legal(cell):
-            return
+            raise ValueError(f"illegal move: ({cell.row}, {cell.column})")
 
         player = self.current_player
         self.grid[cell.row][cell.column] = player
@@ -50,7 +50,7 @@ class Board:
             self
         ) -> None:
         if not self.history:
-            return
+            raise ValueError("nothing to undo")
 
         row, col, captured = self.history.pop()
 
@@ -95,6 +95,22 @@ class Board:
             return True
 
         return self._count_free_threes(cell.row, cell.column, player) < 2
+
+    def legal_moves(
+            self
+        ) -> list[Cell]:
+        """Liste de tous les coups legaux pour le joueur courant, ligne par
+        ligne. Appelle is_legal sur chaque case : cher, a optimiser plus
+        tard (par exemple en se limitant aux coups candidats)."""
+
+        moves = []
+        for row in range(NUMBER_OF_CELLS):
+            for col in range(NUMBER_OF_CELLS):
+                cell = Cell(row, col)
+                if self.is_legal(cell):
+                    moves.append(cell)
+
+        return moves
 
     def winner(self):
         """Renvoie BLACK, WHITE ou None (pas de vainqueur), a partir du

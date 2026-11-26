@@ -3,14 +3,6 @@ from board import (
     NUMBER_OF_CELLS,
     EMPTY
 )
-from heuristic import (
-    CAPTURE_ONE,
-    CAPTURE_TWO,
-    CAPTURE_THREE,
-    CAPTURE_FOUR,
-    CAPTURE_FIVE,
-    STONE_CAPTURE
-)
 from src.ai.weights import HeuristicWeights
 from src.game.Cell import Cell
 from src.helpers.utils import (
@@ -27,11 +19,11 @@ def _evaluate_capture_count(
 
     scores = {
         0: 0,
-        1: weights.capture_one,
-        2: weights.capture_two,
-        3: weights.capture_three,
-        4: weights.capture_four,
-        5: weights.capture_five
+        2: weights.capture_one,
+        4: weights.capture_two,
+        6: weights.capture_three,
+        8: weights.capture_four,
+        10: weights.capture_five
     }
 
     return scores[captures]
