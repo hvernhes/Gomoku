@@ -39,10 +39,7 @@ def _draw_player_to_play(
         font: pygame.font.Font,
         board: Board,
         result: str | int | None,
-<<<<<<< HEAD
-=======
         thinking: bool,
->>>>>>> origin/master
         x: int
 ) -> None:
 
@@ -55,14 +52,10 @@ def _draw_player_to_play(
             12
         )
         pygame.draw.circle(screen, TEXT_COLOR, center, 12, 1)
-<<<<<<< HEAD
-        text = f"{get_player_name(board.current_player)} to play"
-=======
         if thinking:
             text = "AI thinking..."
         else:
             text = f"{get_player_name(board.current_player)} to play"
->>>>>>> origin/master
     else:
         text = "Game over"
 
@@ -88,8 +81,6 @@ def _draw_captures(
         screen.blit(label, (x, 245 + 30 * i))
 
 
-<<<<<<< HEAD
-=======
 def _draw_ai_time(
         screen: pygame.Surface,
         fonts: dict[str, pygame.font.Font],
@@ -115,20 +106,15 @@ def _draw_ai_time(
         screen.blit(label, (x, 365 + 30 * i))
 
 
->>>>>>> origin/master
 def draw_panel(
         screen: pygame.Surface,
         fonts: dict[str, pygame.font.Font],
         board: Board,
         result: str | int | None,
-<<<<<<< HEAD
-        layout: UILayout
-=======
         layout: UILayout,
         ai_player: int | None,
         ai_times: list[float],
         thinking: bool
->>>>>>> origin/master
 ) -> None:
 
     screen.fill(
@@ -138,12 +124,7 @@ def draw_panel(
 
     x = PLAYGROUND_SIZE + PANEL_MARGIN
     _draw_undo_button(screen, fonts["normal"], layout.undo_panel_button)
-<<<<<<< HEAD
-    _draw_player_to_play(screen, fonts["normal"], board, result, x)
-    _draw_captures(screen, fonts, board, x)
-=======
     _draw_player_to_play(screen, fonts["normal"], board, result, thinking, x)
     _draw_captures(screen, fonts, board, x)
     if ai_player is not None:
         _draw_ai_time(screen, fonts, ai_times, x)
->>>>>>> origin/master

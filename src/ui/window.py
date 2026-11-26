@@ -20,23 +20,15 @@ def draw_all_window(
         forbidden: list[tuple[int, int]],
         ghosts: dict[str | int, pygame.Surface],
         overlay: pygame.Surface,
-<<<<<<< HEAD
-        layout: UILayout
-=======
         layout: UILayout,
         ai_player: int | None,
         ai_times: list[float],
         thinking: bool
->>>>>>> origin/master
 ) -> None:
 
     draw_board(screen, board, forbidden)
 
-<<<<<<< HEAD
-    if result is None:
-=======
     if result is None and not thinking:
->>>>>>> origin/master
         hovered = pixel_to_intersection(*pygame.mouse.get_pos())
 
         if hovered is not None:
@@ -51,9 +43,6 @@ def draw_all_window(
 
                 draw_ghost(screen, ghost, *hovered)
 
-<<<<<<< HEAD
-    draw_panel(screen, fonts, board, result, layout)
-=======
     draw_panel(
         screen,
         fonts,
@@ -64,7 +53,6 @@ def draw_all_window(
         ai_times,
         thinking
     )
->>>>>>> origin/master
 
     if result is not None:
         draw_popup(screen, fonts, overlay, result, layout)
