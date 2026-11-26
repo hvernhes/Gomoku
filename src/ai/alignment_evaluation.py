@@ -265,4 +265,3 @@ def check_alignment(
     for cells, properties in alignment.items():
         if cells not in player_situation.aligned:
             player_situation.aligned[cells] = properties.copy()
-

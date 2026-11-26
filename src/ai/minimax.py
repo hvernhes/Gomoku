@@ -21,7 +21,7 @@ WIN_SCORE = 1_000_000
 # toujours et que min / max restent fiables.
 EVALUATION_LIMIT = WIN_SCORE // 2
 
-DEFAULT_DEPTH = 2
+DEFAULT_DEPTH = 4
 
 
 def evaluate(
