@@ -2,7 +2,16 @@ from board import (
     NUMBER_OF_CELLS,
     EMPTY
 )
-from src.helpers.utils import opponent_of
+from src.ai.heuristic import player_evaluation
+from src.ai.player_situation import (
+    init_player_situation,
+    PlayerSituation
+)
+from src.game.Cell import Cell
+from src.helpers.utils import (
+    get_cell_state,
+    opponent_of
+)
 
 
 def create_empty_grid(
@@ -56,3 +65,23 @@ def create_capture_configuration(
     )
     opponent_cells = create_line(first_opponent_cell, direction, 2)
     place_stones(grid, opponent_cells, opponent)
+
+
+def get_player_situation(
+        grid: list[list[int]],
+        player: int
+) -> PlayerSituation:
+
+    player_situation = init_player_situation(0)
+    for row in range(NUMBER_OF_CELLS):
+        for column in range(NUMBER_OF_CELLS):
+            cell = Cell(row, column)
+            cell_state = get_cell_state(grid, cell)
+
+            if cell_state == player:
+                player_evaluation(player, grid, cell, player_situation)
+
+    player_evaluation(player, grid, cell, player_situation)
+
+    return player_situation
+

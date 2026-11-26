@@ -1,9 +1,8 @@
 from board import (
     AXES,
-    NUMBER_OF_CELLS,
     EMPTY
 )
-from src.ai.weights import HeuristicWeights
+from src.ai.player_situation import PlayerSituation
 from src.game.Cell import Cell
 from src.helpers.utils import (
     get_cell_state,
@@ -250,60 +249,20 @@ def _get_alignment(
     return alignment
 
 
-def _compute_alignment_score(
-        aligned: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
-        weights: HeuristicWeights
-) -> int:
-
-    score = 0
-
-    for cells, properties in aligned.items():
-        if len(cells) >= 5 and not properties["broken"]:
-            score += weights.five_open_stones
-
-        elif len(cells) >= 4:
-            if properties["free"] == 2 and not properties["broken"]:
-                score += weights.four_open_stones
-            elif properties["free"] == 1 or properties["broken"] or len(cells) >= 5:          
-                score += weights.four_half_blocked_stones
-            else:
-                score += weights.four_blocked_stones
-
-        elif len(cells) == 3:
-            if properties["free"] == 2:
-                score += weights.three_open_stones
-            elif properties["free"] == 1:          
-                score += weights.three_half_blocked_stones
-            else:
-                score += weights.three_blocked_stones
-
-    return score
-
-
-def evaluate_alignments(
+def check_alignment(
         grid: list[list[int]],
+        cell: Cell,
         player: int,
-        weights: HeuristicWeights
-) -> int:
+        player_situation: PlayerSituation
+) -> None:
 
-    aligned: dict[frozenset[tuple[int, int]], dict[str, bool | int]] = {}
+    alignment = _get_alignment(
+        grid,
+        cell,
+        player
+    )
 
-    for row in range(NUMBER_OF_CELLS):
-        for column in range(NUMBER_OF_CELLS):
-            cell = Cell(row, column)
+    for cells, properties in alignment.items():
+        if cells not in player_situation.aligned:
+            player_situation.aligned[cells] = properties.copy()
 
-            if get_cell_state(grid, cell) != player:
-                continue
-
-            alignment = _get_alignment(
-                grid,
-                cell,
-                player
-            )
-            for cells, properties in alignment.items():
-                if cells not in aligned:
-                    aligned[cells] = properties.copy()
-
-    score = _compute_alignment_score(aligned, weights)
-
-    return score

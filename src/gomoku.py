@@ -24,7 +24,6 @@ def main(
     try:
         screen, fonts, ghosts, overlay, clock, layout = initialize_display()
         weights = generate_weights() if ai_player else None
-        print(ai_player)
         state = GameState.new(ai_player, weights)
 
         running = True
