@@ -369,8 +369,6 @@ _Python_INCLUDE_DIR:INTERNAL=/usr/include/python3.14
 //Python Properties
 _Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;14;6;64;<none>;cpython-314-x86_64-linux-gnu;abi3;/usr/lib64/python3.14;/home/stouitou/Documents/Gomoku/.venv/lib64/python3.14;/home/stouitou/Documents/Gomoku/.venv/lib/python3.14/site-packages;/home/stouitou/Documents/Gomoku/.venv/lib64/python3.14/site-packages
 _Python_INTERPRETER_SIGNATURE:INTERNAL=761a61828da1c625ca9a3c7bf8611772
-//Interpreter reason failure
-_Python_Interpreter_REASON_FAILURE:INTERNAL=
 //NumPy reason failure
 _Python_NumPy_REASON_FAILURE:INTERNAL=
 //Directories where pybind11 and possibly Python headers are located

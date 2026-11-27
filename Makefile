@@ -23,6 +23,9 @@ build: configure
 run: build
 	PYTHONPATH=$(BUILD_DIR) $(PYTHON) -m src.gomoku
 
+test: build
+	PYTHONPATH=. pytest -v -s
+
 # Remove generated build files
 clean:
 	rm -rf $(BUILD_DIR)
