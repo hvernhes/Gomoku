@@ -5,11 +5,11 @@ from dataclasses import dataclass
 class PlayerSituation:
     aligned: dict[frozenset[tuple[int, int]], dict[str, bool | int]]
     captures: dict[str, int]
-    central_position: dict[str, int]
+    central_position: int
 
 
 def init_player_situation(
-        captured_stones
+        captured_stones: int
 ) -> PlayerSituation:
 
     return PlayerSituation(

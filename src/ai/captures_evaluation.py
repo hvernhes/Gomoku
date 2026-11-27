@@ -52,13 +52,13 @@ def _get_capture_possibilities(
 
 def check_captures(
         grid: list[list[int]],
-        cell: Cell,
+        cell: tuple[int, int],
         player: int,
         player_situation: PlayerSituation
 ) -> None:
 
     player_situation.captures["possible_captures"] += _get_capture_possibilities(
         grid,
-        cell,
+        Cell(cell[0], cell[1]),
         player
     )

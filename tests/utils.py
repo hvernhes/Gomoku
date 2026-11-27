@@ -75,13 +75,10 @@ def get_player_situation(
     player_situation = init_player_situation(0)
     for row in range(NUMBER_OF_CELLS):
         for column in range(NUMBER_OF_CELLS):
-            cell = Cell(row, column)
-            cell_state = get_cell_state(grid, cell)
+            cell = grid[row][column]
 
-            if cell_state == player:
-                player_evaluation(player, grid, cell, player_situation)
-
-    player_evaluation(player, grid, cell, player_situation)
+            if cell == player:
+                player_evaluation(player, grid, (row, column), player_situation)
 
     return player_situation
 

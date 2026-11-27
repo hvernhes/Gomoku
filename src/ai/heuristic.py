@@ -8,16 +8,13 @@ from src.ai.player_situation import (
 )
 from src.ai.weights import HeuristicWeights
 from src.game.Cell import Cell
-from src.helpers.utils import (
-    get_cell_state,
-    opponent_of
-)
+from src.helpers.utils import opponent_of
 
 
 def player_evaluation(
         player: int,
         grid: list[list[int]],
-        cell: Cell,
+        cell: tuple[int, int],
         player_situation: PlayerSituation
 ) -> None:
 
@@ -111,13 +108,14 @@ def evaluation(
 
     for row in range(NUMBER_OF_CELLS):
         for column in range(NUMBER_OF_CELLS):
+            cell = grid[row][column]
 
-            if grid[row][column] == player:
-                player_evaluation(player, grid, Cell(row, column), current_player_situation)
-            elif grid[row][column] == opponent:
-                player_evaluation(opponent, grid, Cell(row, column), opponent_situation)
+            if cell == player:
+                player_evaluation(player, grid, (row, column), current_player_situation)
+            elif cell == opponent:
+                player_evaluation(opponent, grid, (row, column), opponent_situation)
 
-    player_score = compute_player_score(current_player_situation, weights)
-    opponent_score = compute_player_score(opponent_situation, weights)
-
-    return player_score - opponent_score
+    return (
+        compute_player_score(current_player_situation, weights)
+         - compute_player_score(opponent_situation, weights)
+    )

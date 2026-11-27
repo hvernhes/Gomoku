@@ -1,6 +1,7 @@
 from board import (
     AXES,
-    EMPTY
+    EMPTY,
+    NUMBER_OF_CELLS
 )
 from src.ai.player_situation import PlayerSituation
 from src.game.Cell import Cell
@@ -10,39 +11,57 @@ from src.helpers.utils import (
 )
 
 
+def _get_cell_state(
+        grid,
+        row,
+        column
+) -> int | None:
+
+    if not (
+        0 <= row < NUMBER_OF_CELLS
+        and 0 <= column < NUMBER_OF_CELLS
+    ):
+        adjacent_cell = None
+    else:
+        adjacent_cell = grid[row][column]
+
+    return adjacent_cell
+
+
 def _get_alignment_properties(
         grid: list[list[int]],
-        starting_cell: Cell,
+        starting_cell: tuple[int, int],
         direction: tuple[int, int],
         player: int,
         opponent: int
 ) -> tuple[set[tuple[int, int]], bool, bool]:
 
-    cells = set({(starting_cell.row, starting_cell.column)})
+    cells = set({(starting_cell)})
     empty = False
     second_blocked_end = False
 
     for i in range(1, 6):
-        adjacent_cell = Cell(
-            starting_cell.row + i * direction[0],
-            starting_cell.column + i * direction[1]
+        adjacent_cell = _get_cell_state(
+            grid,
+            starting_cell[0] + i * direction[0],
+            starting_cell[1] + i * direction[1],
         )
-        state = get_cell_state(grid, adjacent_cell)
 
-        if state == player:
-            cells.add((adjacent_cell.row, adjacent_cell.column))
+        if adjacent_cell == player:
+            cells.add((starting_cell[0] + i * direction[0], starting_cell[1] + i * direction[1]))
 
-        elif state is None or state == opponent:
+        elif adjacent_cell is None or adjacent_cell == opponent:
             second_blocked_end = True
             break
 
-        elif state == EMPTY:
-            second_adjacent_cell = Cell(
-                adjacent_cell.row + direction[0],
-                adjacent_cell.column + direction[1]
+        elif adjacent_cell == EMPTY:
+            second_adjacent_cell = _get_cell_state(
+                grid,
+                starting_cell[0] + i * direction[0] + direction[0],
+                starting_cell[1] + i * direction[1] + direction[1]
             )
-            second_adjacent_cell_state = get_cell_state(grid, second_adjacent_cell)
-            if second_adjacent_cell_state == EMPTY:
+
+            if second_adjacent_cell == EMPTY:
                 break
             if not empty:
                 empty = True
@@ -86,7 +105,7 @@ def _start_of_alignment(
 def _add_alignment(
         alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
         grid: list[list[int]],
-        starting_cell: Cell,
+        starting_cell: tuple[int, int],
         direction: tuple[int, int],
         player: int,
         opponent: int,
@@ -111,7 +130,7 @@ def _add_alignment(
 def _handle_blocked_adjacent_cell(
         alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
         grid: list[list[int]],
-        starting_cell: Cell,
+        starting_cell: tuple[int, int],
         direction: tuple[int, int],
         player: int,
         opponent: int,
@@ -132,13 +151,13 @@ def _handle_blocked_adjacent_cell(
 def _handle_empty_adjacent_cell(
         alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
         grid: list[list[int]],
-        starting_cell: Cell,
+        starting_cell: tuple[int, int],
         direction: tuple[int, int],
         player: int,
         opponent: int,
 ) -> None:
 
-    sign, blocked = _start_of_alignment(grid, starting_cell, direction, player)
+    sign, blocked = _start_of_alignment(grid, Cell(*starting_cell), direction, player)
 
     if (sign != 0):
         good_direction = (direction[0] * sign, direction[1] * sign)
@@ -156,7 +175,7 @@ def _handle_empty_adjacent_cell(
 def _handle_same_player_adjacent_cell(
         alignment: dict[frozenset[tuple[int, int]], dict[str, bool | int]],
         grid: list[list[int]],
-        starting_cell: Cell,
+        starting_cell: tuple[int, int],
         direction: tuple[int, int],
         player: int,
         opponent: int,
@@ -164,8 +183,8 @@ def _handle_same_player_adjacent_cell(
 
     opposite_direction = (-direction[0], -direction[1])
     opposite_cell = Cell(
-        starting_cell.row + opposite_direction[0],
-        starting_cell.column + opposite_direction[1]
+        starting_cell[0] + opposite_direction[0],
+        starting_cell[1] + opposite_direction[1]
     )
     opposite_cell_state = get_cell_state(grid, opposite_cell)
 
@@ -182,8 +201,8 @@ def _handle_same_player_adjacent_cell(
 
     elif opposite_cell_state == EMPTY:
         second_opposite_cell = Cell(
-            starting_cell.row + opposite_direction[0] * 2,
-            starting_cell.column + opposite_direction[1] * 2
+            starting_cell[0] + opposite_direction[0] * 2,
+            starting_cell[1] + opposite_direction[1] * 2
         )
         second_opposite_cell_state =  get_cell_state(grid, second_opposite_cell)
 
@@ -201,7 +220,7 @@ def _handle_same_player_adjacent_cell(
 
 def _get_alignment(
         grid: list[list[int]],
-        starting_cell: Cell,
+        starting_cell: tuple[int, int],
         player: int
 ) -> dict[frozenset[tuple[int, int]], dict[str, bool | int]]:
 
@@ -210,13 +229,12 @@ def _get_alignment(
 
     for direction in AXES:
 
-        adjacent_cell = Cell(
-            starting_cell.row + direction[0],
-            starting_cell.column + direction[1]
+        adjacent_cell = _get_cell_state(
+            grid, starting_cell[0] + direction[0],
+            starting_cell[1] + direction[1]
         )
-        adjacent_cell_state = get_cell_state(grid, adjacent_cell)
 
-        if adjacent_cell_state == opponent or adjacent_cell_state is None:
+        if adjacent_cell == opponent or adjacent_cell is None:
             _handle_blocked_adjacent_cell(
                 alignment,
                 grid,
@@ -226,7 +244,7 @@ def _get_alignment(
                 opponent,
             )
 
-        elif adjacent_cell_state == EMPTY:
+        elif adjacent_cell == EMPTY:
             _handle_empty_adjacent_cell(
                 alignment,
                 grid,
@@ -236,7 +254,7 @@ def _get_alignment(
                 opponent,
             )
 
-        elif adjacent_cell_state == player:
+        elif adjacent_cell == player:
             _handle_same_player_adjacent_cell(
                 alignment,
                 grid,
@@ -251,7 +269,7 @@ def _get_alignment(
 
 def check_alignment(
         grid: list[list[int]],
-        cell: Cell,
+        cell: tuple[int, int],
         player: int,
         player_situation: PlayerSituation
 ) -> None:
@@ -264,4 +282,4 @@ def check_alignment(
 
     for cells, properties in alignment.items():
         if cells not in player_situation.aligned:
-            player_situation.aligned[cells] = properties.copy()
+            player_situation.aligned[cells] = properties

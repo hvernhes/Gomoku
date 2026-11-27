@@ -1,0 +1,3 @@
+/home/stouitou/Documents/Gomoku/cpp/build/CMakeFiles/ai_engine.dir
+/home/stouitou/Documents/Gomoku/cpp/build/CMakeFiles/edit_cache.dir
+/home/stouitou/Documents/Gomoku/cpp/build/CMakeFiles/rebuild_cache.dir
